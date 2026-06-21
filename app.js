@@ -2,6 +2,81 @@
    OmniCRM - Application Logic Controller
    ========================================================================== */
 
+// ==========================================================================
+// Auth Manager - Login / Signup System
+// ==========================================================================
+const Auth = {
+  usersKey: 'crm_users',
+  sessionKey: 'crm_session',
+
+  // Pre-create demo users for each department
+  seedUsers() {
+    if (localStorage.getItem(this.usersKey)) return;
+    const users = [
+      { id: 'USR-001', name: 'Sarah Jenkins', email: 'admin@omnicrm.com', password: 'admin123', role: 'management' },
+      { id: 'USR-002', name: 'Marcus Vance', email: 'sales@omnicrm.com', password: 'sales123', role: 'sales' },
+      { id: 'USR-003', name: 'Devin Carter', email: 'service@omnicrm.com', password: 'service123', role: 'service' },
+      { id: 'USR-004', name: 'Helena Rostova', email: 'finance@omnicrm.com', password: 'finance123', role: 'finance' },
+      { id: 'USR-005', name: 'Alex Rivera', email: 'support@omnicrm.com', password: 'support123', role: 'support' }
+    ];
+    localStorage.setItem(this.usersKey, JSON.stringify(users));
+  },
+
+  // Register a new user
+  register(name, email, password, role) {
+    const users = JSON.parse(localStorage.getItem(this.usersKey) || '[]');
+    if (users.find(u => u.email === email)) {
+      return { success: false, msg: 'Email already registered!' };
+    }
+    const newUser = {
+      id: 'USR-' + Math.floor(Math.random() * 90000 + 10000),
+      name, email, password, role
+    };
+    users.push(newUser);
+    localStorage.setItem(this.usersKey, JSON.stringify(users));
+    return { success: true, msg: 'Account created! Please sign in.' };
+  },
+
+  // Login
+  login(email, password) {
+    const users = JSON.parse(localStorage.getItem(this.usersKey) || '[]');
+    const user = users.find(u => u.email === email && u.password === password);
+    if (!user) {
+      return { success: false, msg: 'Invalid email or password!' };
+    }
+    const session = { userId: user.id, name: user.name, email: user.email, role: user.role };
+    localStorage.setItem(this.sessionKey, JSON.stringify(session));
+    return { success: true, user: session };
+  },
+
+  // Logout
+  logout() {
+    localStorage.removeItem(this.sessionKey);
+    location.reload();
+  },
+
+  // Check current session
+  getSession() {
+    const data = localStorage.getItem(this.sessionKey);
+    return data ? JSON.parse(data) : null;
+  },
+
+  isLoggedIn() {
+    return !!this.getSession();
+  },
+
+  getRoleName(role) {
+    const names = {
+      management: 'Management (Admin)',
+      sales: 'Sales Team',
+      service: 'Service Delivery',
+      finance: 'Finance Team',
+      support: 'Customer Support'
+    };
+    return names[role] || role;
+  }
+};
+
 // 1. Initial Mock Data Setup (Database)
 const INITIAL_LEADS = [
   { id: 'LD-8342', name: 'John Peterson', company: 'Apex Global', email: 'j.peterson@apex.com', phone: '+1 (555) 012-9988', value: 45000, region: 'North America', stage: 'Qualified', service: 'Cloud Migration', owner: 'Sarah Jenkins', score: 80, createdDate: '2026-06-18' },
@@ -80,13 +155,83 @@ const CRM = {
   },
 
   init() {
+    Auth.seedUsers();
+
+    // Check if logged in
+    const session = Auth.getSession();
+    if (!session) {
+      this.showAuthScreen();
+      return;
+    }
+
+    // Apply session to CRM
+    this.state.currentRole = session.role;
+    localStorage.setItem('crm_role', session.role);
+
     this.loadState();
     this.setupListeners();
+    this.authListeners();
     this.startTimers();
     this.renderActiveView();
     this.updateUserInterfaceForRole();
     this.updateSystemDate();
     AutomationEngine.startBackgroundScheduler();
+  },
+
+  showAuthScreen() {
+    document.getElementById('app-container').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('signup-screen').style.display = 'none';
+    this.authListeners();
+  },
+
+  authListeners() {
+    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
+
+    // Toggle login/signup
+    document.getElementById('show-signup').onclick = (e) => {
+      e.preventDefault();
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('signup-screen').style.display = 'flex';
+    };
+    document.getElementById('show-login').onclick = (e) => {
+      e.preventDefault();
+      document.getElementById('signup-screen').style.display = 'none';
+      document.getElementById('login-screen').style.display = 'flex';
+    };
+
+    // Login submit
+    loginForm.onsubmit = (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      const result = Auth.login(email, password);
+      if (result.success) {
+        this.showToast('Welcome back, ' + result.user.name + '!', 'success');
+        location.reload();
+      } else {
+        this.showToast(result.msg, 'danger');
+      }
+    };
+
+    // Signup submit
+    signupForm.onsubmit = (e) => {
+      e.preventDefault();
+      const name = document.getElementById('signup-name').value;
+      const email = document.getElementById('signup-email').value;
+      const password = document.getElementById('signup-password').value;
+      const role = document.getElementById('signup-role').value;
+      const result = Auth.register(name, email, password, role);
+      if (result.success) {
+        this.showToast(result.msg + ' Please sign in.', 'success');
+        document.getElementById('signup-screen').style.display = 'none';
+        document.getElementById('login-screen').style.display = 'flex';
+        signupForm.reset();
+      } else {
+        this.showToast(result.msg, 'danger');
+      }
+    };
   },
 
   // Load state from localStorage or populate defaults
@@ -143,32 +288,39 @@ const CRM = {
     const nameLbl = document.getElementById('current-user-name');
     const roleLbl = document.getElementById('current-user-role-lbl');
 
-    switch (role) {
-      case 'management':
-        avatar.textContent = 'M';
-        nameLbl.textContent = 'Sarah Jenkins';
-        roleLbl.textContent = 'Management';
-        break;
-      case 'sales':
-        avatar.textContent = 'S';
-        nameLbl.textContent = 'Marcus Vance';
-        roleLbl.textContent = 'Sales Representative';
-        break;
-      case 'service':
-        avatar.textContent = 'D';
-        nameLbl.textContent = 'Devin Carter';
-        roleLbl.textContent = 'Delivery Director';
-        break;
-      case 'finance':
-        avatar.textContent = 'F';
-        nameLbl.textContent = 'Helena Rostova';
-        roleLbl.textContent = 'Finance Director';
-        break;
-      case 'support':
-        avatar.textContent = 'H';
-        nameLbl.textContent = 'Alex Rivera';
-        roleLbl.textContent = 'Support Lead';
-        break;
+    const session = Auth.getSession();
+    if (session) {
+      avatar.textContent = session.name.charAt(0).toUpperCase();
+      nameLbl.textContent = session.name;
+      roleLbl.textContent = Auth.getRoleName(session.role);
+    } else {
+      switch (role) {
+        case 'management':
+          avatar.textContent = 'M';
+          nameLbl.textContent = 'Sarah Jenkins';
+          roleLbl.textContent = 'Management';
+          break;
+        case 'sales':
+          avatar.textContent = 'S';
+          nameLbl.textContent = 'Marcus Vance';
+          roleLbl.textContent = 'Sales Representative';
+          break;
+        case 'service':
+          avatar.textContent = 'D';
+          nameLbl.textContent = 'Devin Carter';
+          roleLbl.textContent = 'Delivery Director';
+          break;
+        case 'finance':
+          avatar.textContent = 'F';
+          nameLbl.textContent = 'Helena Rostova';
+          roleLbl.textContent = 'Finance Director';
+          break;
+        case 'support':
+          avatar.textContent = 'H';
+          nameLbl.textContent = 'Alex Rivera';
+          roleLbl.textContent = 'Support Lead';
+          break;
+      }
     }
 
     // 2. Hide unauthorized menu items in sidebar
@@ -1117,7 +1269,7 @@ const CRM = {
   showToast(message, type = 'info') {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
+    toast.className = `toast toast-${type === 'danger' ? 'danger' : type}`;
     
     toast.innerHTML = `
       <span class="toast-msg">${message}</span>
@@ -1237,7 +1389,12 @@ const CRM = {
       this.showToast(`Theme switched to ${this.state.theme} mode`, 'success');
     });
 
-    // 4. Quick Actions Trigger Open Main Hub Action Modal
+    // 4. Logout Button
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      Auth.logout();
+    });
+
+    // 5. Quick Actions Trigger Open Main Hub Action Modal
     const quickAddBtn = document.getElementById('quick-add-btn');
     const quickModal = document.getElementById('quick-action-modal');
     
