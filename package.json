@@ -2,7 +2,7 @@
   "engines": { "node": ">=18" },
   "name": "omnicrm",
   "version": "2.0.0",
-  "description": "OmniCRM - Full-stack CRM with Node.js + SQLite backend",
+  "description": "OmniCRM - Full-stack CRM",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -20,11 +20,5 @@
     "url": "https://github.com/niyazulhassan3m-create/OpenGit/issues"
   },
   "homepage": "https://github.com/niyazulhassan3m-create/OpenGit#readme",
-  "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "better-sqlite3": "^12.11.1",
-    "cors": "^2.8.6",
-    "express": "^5.2.1",
-    "jsonwebtoken": "^9.0.3"
-  }
+  "dependencies": {}
 }

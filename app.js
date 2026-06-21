@@ -7,6 +7,65 @@
 // ==========================================================================
 
 const Auth = {
+  usersKey: 'crm_users',
+  sessionKey: 'crm_session',
+
+  // Pre-create demo users for each department
+  seedUsers() {
+    if (localStorage.getItem(this.usersKey)) return;
+    const users = [
+      { id: 'USR-001', name: 'Sarah Jenkins', email: 'admin@omnicrm.com', password: 'admin123', role: 'management' },
+      { id: 'USR-002', name: 'Marcus Vance', email: 'sales@omnicrm.com', password: 'sales123', role: 'sales' },
+      { id: 'USR-003', name: 'Devin Carter', email: 'service@omnicrm.com', password: 'service123', role: 'service' },
+      { id: 'USR-004', name: 'Helena Rostova', email: 'finance@omnicrm.com', password: 'finance123', role: 'finance' },
+      { id: 'USR-005', name: 'Alex Rivera', email: 'support@omnicrm.com', password: 'support123', role: 'support' }
+    ];
+    localStorage.setItem(this.usersKey, JSON.stringify(users));
+  },
+
+  // Register a new user
+  register(name, email, password, role) {
+    const users = JSON.parse(localStorage.getItem(this.usersKey) || '[]');
+    if (users.find(u => u.email === email)) {
+      return { success: false, msg: 'Email already registered!' };
+    }
+    const newUser = {
+      id: 'USR-' + Math.floor(Math.random() * 90000 + 10000),
+      name, email, password, role
+    };
+    users.push(newUser);
+    localStorage.setItem(this.usersKey, JSON.stringify(users));
+    return { success: true, msg: 'Account created! Please sign in.' };
+  },
+
+  // Login
+  login(email, password) {
+    const users = JSON.parse(localStorage.getItem(this.usersKey) || '[]');
+    const user = users.find(u => u.email === email && u.password === password);
+    if (!user) {
+      return { success: false, msg: 'Invalid email or password!' };
+    }
+    const session = { userId: user.id, name: user.name, email: user.email, role: user.role };
+    localStorage.setItem(this.sessionKey, JSON.stringify(session));
+    return { success: true, user: session };
+  },
+
+  // Logout
+  logout() {
+    localStorage.removeItem(this.sessionKey);
+    location.reload();
+  },
+
+  // Check current session
+  getSession() {
+    const data = localStorage.getItem(this.sessionKey);
+    return data ? JSON.parse(data) : null;
+  },
+
+  isLoggedIn() {
+    return !!this.getSession();
+  },
+
   getRoleName(role) {
     const names = {
       management: 'Management (Admin)',
@@ -16,31 +75,62 @@ const Auth = {
       support: 'Customer Support'
     };
     return names[role] || role;
-  },
-
-  async login(email, password) {
-    return await API.login(email, password);
-  },
-
-  async register(name, email, password, role) {
-    return await API.register(name, email, password, role);
-  },
-
-  logout() {
-    API.logout();
-    location.reload();
-  },
-
-  getSession() {
-    return API.getStoredUser();
-  },
-
-  isLoggedIn() {
-    return API.isLoggedIn();
   }
 };
 
-// Data now comes from backend API (db.js seeds it)
+// 1. Initial Mock Data Setup (Database)
+const INITIAL_LEADS = [
+  { id: 'LD-8342', name: 'John Peterson', company: 'Apex Global', email: 'j.peterson@apex.com', phone: '+1 (555) 012-9988', value: 45000, region: 'North America', stage: 'Qualified', service: 'Cloud Migration', owner: 'Sarah Jenkins', score: 80, createdDate: '2026-06-18' },
+  { id: 'LD-9271', name: 'Sophie Dubois', company: 'Lumiere Fashion', email: 's.dubois@lumiere.fr', phone: '+33 1 42 68 53 11', value: 12000, region: 'Europe', stage: 'Contacted', service: 'Digital Marketing', owner: 'Hans Schmidt', score: 60, createdDate: '2026-06-19' },
+  { id: 'LD-3051', name: 'Kenji Sato', company: 'Nippon Logistics', email: 'k.sato@nippon-log.jp', phone: '+81 3 5555 0143', value: 85000, region: 'Asia-Pacific', stage: 'Proposal', service: 'Software Development', owner: 'Mei Ling', score: 90, createdDate: '2026-06-15' },
+  { id: 'LD-4412', name: 'Camila Gomez', company: 'Soluciones Agri', email: 'c.gomez@solagri.cl', phone: '+56 2 2580 9100', value: 7500, region: 'Latin America', stage: 'New', service: 'Cybersecurity Audit', owner: 'Carlos Silva', score: 40, createdDate: '2026-06-21' },
+  { id: 'LD-5288', name: 'Robert Chen', company: 'Pacific Tech', email: 'r.chen@pactech.com', phone: '+1 (555) 303-4921', value: 62000, region: 'North America', stage: 'Won', service: 'Software Development', owner: 'Sarah Jenkins', score: 100, createdDate: '2026-06-10' }
+];
+
+const INITIAL_PROJECTS = [
+  {
+    id: 'PRJ-1024',
+    leadId: 'LD-5288',
+    name: 'Software Development - Pacific Tech',
+    client: 'Pacific Tech',
+    pm: 'Devin Carter (Dev PM)',
+    budget: 62000,
+    deadline: '2026-08-10',
+    milestones: [
+      { name: "Kickoff & Requirements", completed: true, completedDate: '2026-06-12' },
+      { name: "Design & Implementation", completed: false, completedDate: null },
+      { name: "Testing & Handover", completed: false, completedDate: null }
+    ],
+    progress: 33,
+    status: 'Active'
+  }
+];
+
+const INITIAL_ACCOUNTS = [
+  {
+    id: 'ACC-3941',
+    name: 'Pacific Tech',
+    email: 'r.chen@pactech.com',
+    phone: '+1 (555) 303-4921',
+    region: 'North America',
+    service: 'Software Development',
+    createdDate: '2026-06-10',
+    timeline: [
+      { title: "Account Established", date: '2026-06-10', description: "Account created upon deal closing." },
+      { title: "Project Initiated", date: '2026-06-11', description: "V1 project schedule created automatically." },
+      { title: "Kickoff Milestone Completed", date: '2026-06-12', description: "First milestone checklist marked completed by Devin Carter." }
+    ]
+  }
+];
+
+const INITIAL_TICKETS = [
+  { id: 'TCK-201', subject: 'Server connection latency peak', client: 'Apex Global', status: 'Open', priority: 'High', description: 'Web client reports spikes of up to 4s load times on backend database query APIs.', assignee: 'Devin Carter', createdTime: new Date(Date.now() - 4.5 * 60 * 60 * 1000).toISOString() },
+  { id: 'TCK-202', subject: 'Password reset failure in customer portal', client: 'Lumiere Fashion', status: 'In Progress', priority: 'Medium', description: 'User does not receive SMTP verification email code.', assignee: 'Sarah Jenkins', createdTime: new Date(Date.now() - 2.5 * 60 * 60 * 1000).toISOString() }
+];
+
+const INITIAL_INVOICES = [
+  { id: 'INV-40122', projectId: 'PRJ-1024', client: 'Pacific Tech', project: 'Software Development - Pacific Tech', milestone: 'Kickoff & Requirements', amount: 20666.67, issueDate: '2026-06-12', dueDate: '2026-06-26', status: 'Paid' }
+];
 
 // 2. State Controller
 const CRM = {
@@ -65,7 +155,9 @@ const CRM = {
     support: ['dashboard', 'accounts', 'tickets']
   },
 
-  async init() {
+  init() {
+    Auth.seedUsers();
+
     const session = Auth.getSession();
     if (!session) {
       this.initLoginPage();
@@ -76,7 +168,7 @@ const CRM = {
     this.state.currentRole = session.role;
     localStorage.setItem('crm_role', session.role);
 
-    await this.loadState();
+    this.loadState();
     this.setupListeners();
     this.startTimers();
     this.renderActiveView();
@@ -101,7 +193,7 @@ const CRM = {
       }
       var result = Auth.login(email, password);
       if (result.success) {
-        window.location.reload();
+        location.reload();
       } else {
         errEl.textContent = result.msg;
       }
@@ -152,249 +244,166 @@ const CRM = {
     });
   },
 
-  // Load state from API
-  async loadState() {
-    try {
-      this.state.leads = await API.get('/api/leads');
-      this.state.projects = await API.get('/api/projects');
-      this.state.accounts = await API.get('/api/accounts');
-      this.state.tickets = await API.get('/api/tickets');
-      this.state.invoices = await API.get('/api/invoices');
-      this.state.tasks = await API.get('/api/tasks');
-    } catch (e) {
-      console.error('Failed to load data:', e);
-    }
-    
-    const savedTheme = localStorage.getItem('crm_theme') || 'dark';
-    this.state.theme = savedTheme;
-    if (savedTheme === 'light') {
-      document.body.classList.remove('dark-theme');
-      document.body.classList.add('light-theme');
+  // Load state from localStorage or populate defaults
+  loadState() {
+    if (!localStorage.getItem('crm_leads')) {
+      localStorage.setItem('crm_leads', JSON.stringify(INITIAL_LEADS));
+      localStorage.setItem('crm_projects', JSON.stringify(INITIAL_PROJECTS));
+      localStorage.setItem('crm_accounts', JSON.stringify(INITIAL_ACCOUNTS));
+      localStorage.setItem('crm_tickets', JSON.stringify(INITIAL_TICKETS));
+      localStorage.setItem('crm_invoices', JSON.stringify(INITIAL_INVOICES));
+      localStorage.setItem('crm_tasks', JSON.stringify([]));
+      localStorage.setItem('crm_automation_logs', JSON.stringify([
+        { id: 'LOG-001', timestamp: new Date().toISOString(), workflow: 'System Init', message: 'OmniCRM system databases populated with mock startup templates.', type: 'info' }
+      ]));
     }
 
-    const savedRole = localStorage.getItem('crm_role') || 'management';
-    this.state.currentRole = savedRole;
-    document.getElementById('role-select').value = savedRole;
+    this.state.leads = JSON.parse(localStorage.getItem('crm_leads') || '[]');
+    this.state.projects = JSON.parse(localStorage.getItem('crm_projects') || '[]');
+    this.state.accounts = JSON.parse(localStorage.getItem('crm_accounts') || '[]');
+    this.state.tickets = JSON.parse(localStorage.getItem('crm_tickets') || '[]');
+    this.state.invoices = JSON.parse(localStorage.getItem('crm_invoices') || '[]');
+    this.state.tasks = JSON.parse(localStorage.getItem('crm_tasks') || '[]');
+
+    // Restore theme from localStorage
+    const savedTheme = localStorage.getItem('crm_theme');
+    if (savedTheme) {
+      this.state.theme = savedTheme;
+      if (savedTheme === 'light') {
+        document.body.classList.remove('dark-theme');
+        document.body.classList.add('light-theme');
+      } else {
+        document.body.classList.remove('light-theme');
+        document.body.classList.add('dark-theme');
+      }
+    }
+
+    // Restore role from localStorage
+    this.state.currentRole = localStorage.getItem('crm_role') || 'management';
   },
 
-  // Save to backend via API
-  async saveToApi(key, item) {
-    if (!item) {
-      const items = this.state[key];
-      if (!items) return;
-      for (const it of items) {
-        try { await API.put(`/api/${key}/${it.id}`, it); }
-        catch { try { await API.post(`/api/${key}`, it); } catch {} }
-      }
+  // Persist state to localStorage
+  saveState(key) {
+    if (key === 'leads') localStorage.setItem('crm_leads', JSON.stringify(this.state.leads));
+    else if (key === 'projects') localStorage.setItem('crm_projects', JSON.stringify(this.state.projects));
+    else if (key === 'accounts') localStorage.setItem('crm_accounts', JSON.stringify(this.state.accounts));
+    else if (key === 'tickets') localStorage.setItem('crm_tickets', JSON.stringify(this.state.tickets));
+    else if (key === 'invoices') localStorage.setItem('crm_invoices', JSON.stringify(this.state.invoices));
+    else if (key === 'tasks') localStorage.setItem('crm_tasks', JSON.stringify(this.state.tasks));
+  },
+
+  // Update Date
+  updateSystemDate() {
+    const el = document.getElementById('system-date');
+    if (el) el.textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+  },
+
+  // Switch between different management view modules
+  switchView(view) {
+    if (!this.permissions[this.state.currentRole].includes(view)) {
+      this.showToast('Access denied: You do not have permission for this module.', 'danger');
       return;
     }
-    try { await API.put(`/api/${key}/${item.id}`, item); }
-    catch { try { await API.post(`/api/${key}`, item); } catch (e) { console.error(`Failed to save ${key}:`, e); } }
-  },
+    this.state.currentView = view;
 
-  updateSystemDate() {
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    document.getElementById('system-date').textContent = new Date().toLocaleDateString('en-US', options);
-  },
+    // Update active menu
+    document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+    const activeItem = document.querySelector(`.menu-item[data-view="${view}"]`);
+    if (activeItem) activeItem.classList.add('active');
 
-  /* ==========================================================================
-     Role Management
-     ========================================================================== */
-  updateUserInterfaceForRole() {
-    const role = this.state.currentRole;
-    const permittedViews = this.permissions[role];
-
-    // 1. Update Profile Card in Sidebar
-    const avatar = document.getElementById('current-user-avatar');
-    const nameLbl = document.getElementById('current-user-name');
-    const roleLbl = document.getElementById('current-user-role-lbl');
-
-    const session = Auth.getSession();
-    if (session) {
-      avatar.textContent = session.name.charAt(0).toUpperCase();
-      nameLbl.textContent = session.name;
-      roleLbl.textContent = Auth.getRoleName(session.role);
-    } else {
-      switch (role) {
-        case 'management':
-          avatar.textContent = 'M';
-          nameLbl.textContent = 'Sarah Jenkins';
-          roleLbl.textContent = 'Management';
-          break;
-        case 'sales':
-          avatar.textContent = 'S';
-          nameLbl.textContent = 'Marcus Vance';
-          roleLbl.textContent = 'Sales Representative';
-          break;
-        case 'service':
-          avatar.textContent = 'D';
-          nameLbl.textContent = 'Devin Carter';
-          roleLbl.textContent = 'Delivery Director';
-          break;
-        case 'finance':
-          avatar.textContent = 'F';
-          nameLbl.textContent = 'Helena Rostova';
-          roleLbl.textContent = 'Finance Director';
-          break;
-        case 'support':
-          avatar.textContent = 'H';
-          nameLbl.textContent = 'Alex Rivera';
-          roleLbl.textContent = 'Support Lead';
-          break;
-      }
-    }
-
-    // 2. Hide unauthorized menu items in sidebar
-    const menuItems = document.querySelectorAll('.sidebar-menu .menu-item');
-    menuItems.forEach(item => {
-      const view = item.getAttribute('data-view');
-      const perm = item.getAttribute('data-perm');
-      
-      if (perm && !permittedViews.includes(perm)) {
-        item.style.display = 'none';
-      } else {
-        item.style.display = 'flex';
-      }
-    });
-
-    // 3. Check if current view is authorized, else redirect to Dashboard
-    if (!permittedViews.includes(this.state.currentView)) {
-      this.switchView('dashboard');
-    }
-
-    // 4. Disable/Hide Quick Actions based on Role permissions
-    const quickAddBtn = document.getElementById('quick-add-btn');
-    if (role === 'support' || role === 'finance') {
-      quickAddBtn.style.display = 'none';
-    } else {
-      quickAddBtn.style.display = 'inline-flex';
-    }
-  },
-
-  /* ==========================================================================
-     Routing & Switch Views
-     ========================================================================== */
-  switchView(viewName) {
-    // Save to state
-    this.state.currentView = viewName;
-    
-    // Update menu highlight
-    const menuItems = document.querySelectorAll('.sidebar-menu .menu-item');
-    menuItems.forEach(item => {
-      if (item.getAttribute('data-view') === viewName) {
-        item.classList.add('active');
-      } else {
-        item.classList.remove('active');
-      }
-    });
-
-    // Update title
-    let title = 'Dashboard';
-    switch (viewName) {
-      case 'dashboard': title = 'Dashboard Insights'; break;
-      case 'leads': title = 'Lead Pipelines'; break;
-      case 'accounts': title = 'Accounts & Contacts'; break;
-      case 'projects': title = 'Project Tracking'; break;
-      case 'tickets': title = 'Service Desk'; break;
-      case 'invoices': title = 'Financial Ledger'; break;
-      case 'workflows': title = 'Workflow Automation Engine'; break;
-    }
-    document.getElementById('page-title').textContent = title;
-
-    // Render the view
     this.renderActiveView();
   },
 
+  // Central rendering orchestrator based on current view
   renderActiveView() {
-    const container = document.getElementById('main-content-view');
-    
+    const target = document.getElementById('view-content');
+    target.scrollTop = 0;
+
     switch (this.state.currentView) {
       case 'dashboard':
-        this.renderDashboard(container);
+        this.renderDashboard(target);
         break;
       case 'leads':
-        this.renderLeads(container);
+        this.renderLeads(target);
         break;
       case 'accounts':
-        this.renderAccounts(container);
+        this.renderAccounts(target);
         break;
       case 'projects':
-        this.renderProjects(container);
+        this.renderProjects(target);
         break;
       case 'tickets':
-        this.renderTickets(container);
+        this.renderTickets(target);
         break;
       case 'invoices':
-        this.renderInvoices(container);
+        this.renderInvoices(target);
         break;
       case 'workflows':
-        this.renderWorkflows(container);
+        this.renderWorkflows(target);
         break;
+      default:
+        target.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);">Select a management module from the sidebar.</div>';
     }
   },
 
+  updateUserInterfaceForRole() {
+    const session = Auth.getSession();
+    const userName = session ? session.name : 'User';
+    const roleDisplay = Auth.getRoleName(this.state.currentRole);
+    document.getElementById('sidebar-user-name').textContent = userName;
+    document.getElementById('sidebar-user-role').textContent = roleDisplay;
+    document.getElementById('role-select').value = this.state.currentRole;
+
+    // Show/hide menu items based on permissions
+    document.querySelectorAll('.menu-item').forEach(item => {
+      const view = item.getAttribute('data-view');
+      item.style.display = this.permissions[this.state.currentRole].includes(view) ? '' : 'none';
+    });
+  },
+
   /* ==========================================================================
-     View Renderers
+     Views Rendering (partial - dashboard + leads + accounts + projects + tickets + invoices + workflows)
      ========================================================================== */
 
   // 1. DASHBOARD VIEW
   renderDashboard(target) {
-    // Calculations
-    const wonLeads = this.state.leads.filter(l => l.stage === 'Won');
-    const totalWonRevenue = wonLeads.reduce((acc, curr) => acc + (parseFloat(curr.value) || 0), 0);
-    const activeProjects = this.state.projects.filter(p => p.status === 'Active').length;
-    const openTickets = this.state.tickets.filter(t => t.status !== 'Resolved').length;
-    
-    const totalDeals = this.state.leads.filter(l => l.stage === 'Won' || l.stage === 'Lost').length;
-    const conversionRate = totalDeals > 0 ? Math.round((wonLeads.length / totalDeals) * 100) : 100;
-
+    const leads = this.state.leads;
+    const wonLeads = leads.filter(l => l.stage === 'Won');
+    const totalRevenue = wonLeads.reduce((sum, l) => sum + (parseFloat(l.value) || 0), 0);
+    const projects = this.state.projects;
+    const activeProjects = projects.filter(p => p.status === 'Active');
+    const openTickets = this.state.tickets.filter(t => t.status !== 'Resolved');
     const logs = JSON.parse(localStorage.getItem('crm_automation_logs') || '[]');
 
+    // Compute pipeline value
+    const pipelineValue = leads.filter(l => l.stage !== 'Won' && l.stage !== 'Lost')
+      .reduce((sum, l) => sum + (parseFloat(l.value) || 0), 0);
+
     target.innerHTML = `
-      <!-- Metric Cards Row -->
-      <div class="metrics-row">
-        <div class="card metric-card">
-          <div class="metric-icon-wrapper" style="color: var(--color-success);">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-          </div>
-          <div class="metric-info">
-            <span class="metric-label">Sales Revenue</span>
-            <span class="metric-value">$${totalWonRevenue.toLocaleString()}</span>
-          </div>
+      <!-- Stats Cards Row -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <span class="stat-value">${leads.length}</span>
+          <span class="stat-label">Total Leads</span>
         </div>
-
-        <div class="card metric-card">
-          <div class="metric-icon-wrapper" style="color: var(--accent-secondary);">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-          </div>
-          <div class="metric-info">
-            <span class="metric-label">Active Projects</span>
-            <span class="metric-value">${activeProjects}</span>
-          </div>
+        <div class="stat-card">
+          <span class="stat-value">$${pipelineValue.toLocaleString()}</span>
+          <span class="stat-label">Pipeline Value</span>
         </div>
-
-        <div class="card metric-card">
-          <div class="metric-icon-wrapper" style="color: var(--color-warning);">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          </div>
-          <div class="metric-info">
-            <span class="metric-label">Open Tickets</span>
-            <span class="metric-value">${openTickets}</span>
-          </div>
+        <div class="stat-card">
+          <span class="stat-value">${activeProjects.length}</span>
+          <span class="stat-label">Active Projects</span>
         </div>
-
-        <div class="card metric-card">
-          <div class="metric-icon-wrapper" style="color: var(--accent-primary);">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          </div>
-          <div class="metric-info">
-            <span class="metric-label">Deal Win Rate</span>
-            <span class="metric-value">${conversionRate}%</span>
-          </div>
+        <div class="stat-card">
+          <span class="stat-value">$${totalRevenue.toLocaleString()}</span>
+          <span class="stat-label">Total Revenue (Won)</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value">${openTickets.length}</span>
+          <span class="stat-label">Open Tickets</span>
         </div>
       </div>
 
-      <!-- Main Dashboard Grid -->
       <div class="dashboard-grid">
         <!-- Chart Column -->
         <div class="card">
@@ -602,7 +611,6 @@ const CRM = {
     const acc = this.state.accounts.find(a => a.id === accountId);
     if (!acc) return;
 
-    // Highlight row
     const rows = document.querySelectorAll('.data-table tbody tr');
     rows.forEach(r => r.style.backgroundColor = '');
     const activeRow = document.getElementById(`acc-row-${accountId}`);
@@ -613,9 +621,9 @@ const CRM = {
       <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
         <div>
           <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary);">${acc.name}</h3>
-          <span style="font-size: 0.8rem; color: var(--text-muted);">${acc.phone || ''} &bull; ${acc.industry || acc.region || ''}</span>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">${acc.phone} &bull; ${acc.region}</span>
         </div>
-        <span class="badge badge-success">${acc.industry || acc.service || 'Active'}</span>
+        <span class="badge badge-success">${acc.service}</span>
       </div>
 
       <div class="control-group" style="margin-bottom: 20px;">
@@ -625,7 +633,7 @@ const CRM = {
       </div>
 
       <div class="timeline">
-        ${(acc.timeline || []).slice().reverse().map(event => `
+        ${acc.timeline.slice().reverse().map(event => `
           <div class="timeline-event">
             <div class="timeline-event-header">
               <span class="timeline-title">${event.title}</span>
@@ -634,7 +642,6 @@ const CRM = {
             <div class="timeline-body">${event.description}</div>
           </div>
         `).join('')}
-        ${!acc.timeline || acc.timeline.length === 0 ? '<div style="color:var(--text-muted);font-size:0.85rem;padding:16px 0;">No timeline events yet</div>' : ''}
       </div>
     `;
   },
@@ -650,14 +657,13 @@ const CRM = {
       case 'Meeting': desc = "Sync review meeting completed. Confirmed deliverables roadmap timelines."; break;
     }
 
-    if (!acc.timeline) acc.timeline = [];
     acc.timeline.push({
       title: `${type} Logged`,
       date: new Date().toISOString().split('T')[0],
       description: desc
     });
 
-    this.saveToApi('accounts');
+    this.saveState('accounts');
     this.showAccountDetails(accountId);
     this.showToast(`${type} logged successfully`, 'success');
   },
@@ -689,26 +695,25 @@ const CRM = {
             </div>
 
             <div style="font-size: 0.85rem; display: flex; justify-content: space-between;">
-              <span style="color: var(--text-secondary);">Team: <strong>${project.team || project.pm || '-'}</strong></span>
+              <span style="color: var(--text-secondary);">PM: <strong>${project.pm}</strong></span>
               <span style="color: var(--text-secondary);">Due: <strong>${project.deadline}</strong></span>
             </div>
 
             <div style="border-top: 1px solid var(--border-color); padding-top: 14px;">
               <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 8px;">Milestone Checklist</span>
               <div style="display: flex; flex-direction: column; gap: 8px;">
-                ${(project.milestones || []).map((m, idx) => `
+                ${project.milestones.map((m, idx) => `
                   <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-primary); cursor: pointer;">
                     <input type="checkbox" ${m.completed ? 'checked disabled' : ''} onchange="CRM.completeMilestone('${project.id}', ${idx})" style="width: 16px; height: 16px;">
                     <span style="${m.completed ? 'text-decoration: line-through; color: var(--text-muted);' : ''}">${m.name}</span>
                     ${m.completed ? `<span style="font-size: 0.75rem; color: var(--color-success); margin-left: auto;">${m.completedDate}</span>` : ''}
                   </label>
                 `).join('')}
-                ${!project.milestones || project.milestones.length === 0 ? '<span style="font-size:0.8rem;color:var(--text-muted);">No milestones defined</span>' : ''}
               </div>
             </div>
             
             <div style="font-size: 0.85rem; color: var(--accent-secondary); font-weight: 600; text-align: right;">
-              Value: $${parseFloat(project.value || project.budget || 0).toLocaleString()}
+              Budget: $${parseFloat(project.budget).toLocaleString()}
             </div>
           </div>
         `).join('') || '<div class="card" style="grid-column: span 3; text-align: center; color: var(--text-muted);">No active projects listed. Won leads spawn projects automatically.</div>'}
@@ -718,9 +723,8 @@ const CRM = {
 
   completeMilestone(projectId, milestoneIndex) {
     const project = this.state.projects.find(p => p.id === projectId);
-    if (!project || !project.milestones) return;
+    if (!project) return;
 
-    if (!project.milestones[milestoneIndex]) return;
     project.milestones[milestoneIndex].completed = true;
     project.milestones[milestoneIndex].completedDate = new Date().toISOString().split('T')[0];
 
@@ -731,13 +735,11 @@ const CRM = {
       project.status = 'Completed';
     }
 
-    this.saveToApi('projects');
+    this.saveState('projects');
     this.showToast(`Milestone completed successfully`, 'success');
 
-    // Trigger Invoice Automation trigger
     AutomationEngine.trigger('milestoneCompleted', { project, milestoneIndex });
     
-    // Refresh view
     this.renderActiveView();
   },
 
@@ -771,7 +773,7 @@ const CRM = {
                 <td>
                   <strong>${ticket.subject}</strong>
                   <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; max-width: 320px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                    ${ticket.description || ticket.category || 'No description'}
+                    ${ticket.description || 'No description'}
                   </div>
                 </td>
                 <td><span class="priority-pill priority-${ticket.priority}">${ticket.priority}</span></td>
@@ -780,10 +782,10 @@ const CRM = {
                     ${ticket.status}
                   </span>
                 </td>
-                <td>${ticket.assignee || ticket.agent || 'Unassigned'}</td>
+                <td>${ticket.assignee || 'Unassigned'}</td>
                 <td>
                   ${ticket.status === 'Resolved' ? '<span class="badge badge-success">Closed SLA</span>' : 
-                    `<span class="badge badge-danger sla-timer" data-start="${ticket.createdTime || ticket.createdDate}" data-priority="${ticket.priority}">Calculating...</span>`
+                    `<span class="badge badge-danger sla-timer" data-start="${ticket.createdTime}" data-priority="${ticket.priority}">Calculating...</span>`
                   }
                 </td>
                 <td>
@@ -808,10 +810,9 @@ const CRM = {
     if (!ticket) return;
 
     ticket.status = 'Resolved';
-    this.saveToApi('tickets');
+    this.saveState('tickets');
     this.showToast(`Ticket ${ticketId} marked resolved`, 'success');
     
-    // Log resolution to automation log
     AutomationEngine.logActivity(
       'Service Request', 
       `Ticket <strong>${ticketId}</strong> ("${ticket.subject}") marked as <strong>Resolved</strong>. SLA clock stopped.`,
@@ -827,13 +828,13 @@ const CRM = {
 
     ticket.status = 'In Progress';
     switch (this.state.currentRole) {
-      case 'management': ticket.agent = ticket.agent || "Sarah Jenkins"; break;
-      case 'sales': ticket.agent = ticket.agent || "Marcus Vance"; break;
-      case 'service': ticket.agent = ticket.agent || "Devin Carter"; break;
-      case 'finance': ticket.agent = ticket.agent || "Helena Rostova"; break;
-      case 'support': ticket.agent = ticket.agent || "Alex Rivera"; break;
+      case 'management': ticket.assignee = "Sarah Jenkins"; break;
+      case 'sales': ticket.assignee = "Marcus Vance"; break;
+      case 'service': ticket.assignee = "Devin Carter"; break;
+      case 'finance': ticket.assignee = "Helena Rostova"; break;
+      case 'support': ticket.assignee = "Alex Rivera"; break;
     }
-    this.saveToApi('tickets');
+    this.saveState('tickets');
     this.showToast(`Ticket ${ticketId} assigned and marked In Progress`, 'success');
     this.renderActiveView();
   },
@@ -844,7 +845,7 @@ const CRM = {
       const startTime = new Date(timer.getAttribute('data-start')).getTime();
       const priority = timer.getAttribute('data-priority');
       
-      let durationHours = 24; // Default Low
+      let durationHours = 24;
       if (priority === 'Urgent') durationHours = 2;
       else if (priority === 'High') durationHours = 4;
       else if (priority === 'Medium') durationHours = 8;
@@ -852,7 +853,7 @@ const CRM = {
       const limitTime = startTime + durationHours * 60 * 60 * 1000;
       
       const updateClock = () => {
-        if (!document.body.contains(timer)) return; // prevent leak
+        if (!document.body.contains(timer)) return;
         
         const now = Date.now();
         const diff = limitTime - now;
@@ -867,9 +868,9 @@ const CRM = {
           
           timer.textContent = `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
           
-          if (diff < 1 * 60 * 60 * 1000) { // < 1 hour left
+          if (diff < 1 * 60 * 60 * 1000) {
             timer.className = "badge badge-danger sla-pulse";
-          } else if (diff < 4 * 60 * 60 * 1000) { // < 4 hours left
+          } else if (diff < 4 * 60 * 60 * 1000) {
             timer.className = "badge badge-warning";
           } else {
             timer.className = "badge badge-info";
@@ -946,10 +947,9 @@ const CRM = {
     if (!inv) return;
 
     inv.status = 'Paid';
-    this.saveToApi('invoices');
+    this.saveState('invoices');
     this.showToast(`Payment recorded for Invoice ${invoiceId}`, 'success');
     
-    // Log payment
     AutomationEngine.logActivity(
       'Payment Tracking', 
       `Invoice payment of <strong>$${parseFloat(inv.amount).toLocaleString()}</strong> received from <strong>${inv.client}</strong>. Status updated to <strong>Paid</strong>.`,
@@ -1123,7 +1123,6 @@ const CRM = {
       </div>
     `;
 
-    // Listen to changes on switches
     document.getElementById('wf-assign-switch').addEventListener('change', (e) => {
       AutomationEngine.rules.leadAssignment = e.target.checked;
       AutomationEngine.saveRules();
@@ -1160,7 +1159,7 @@ const CRM = {
      ========================================================================== */
   
   // Lead Status Modification
-  async moveLeadStage(leadId, dir) {
+  moveLeadStage(leadId, dir) {
     const lead = this.state.leads.find(l => l.id === leadId);
     if (!lead) return;
 
@@ -1172,12 +1171,12 @@ const CRM = {
     
     const prevStage = lead.stage;
     lead.stage = stages[newIdx];
+    this.saveState('leads');
     this.showToast(`Lead status updated to ${lead.stage}`, 'success');
-    try { await API.put('/api/leads/' + lead.id, lead); } catch (e) { console.error(e); }
 
     if (lead.stage === 'Won' && prevStage !== 'Won') {
       AutomationEngine.trigger('leadWon', lead);
-      await this.loadState();
+      this.loadState();
     }
     if (lead.stage === 'Lost' && prevStage !== 'Lost') {
       AutomationEngine.trigger('leadLost', lead);
@@ -1199,7 +1198,6 @@ const CRM = {
     
     container.appendChild(toast);
     
-    // Auto remove toast in 4.5 seconds
     setTimeout(() => {
       if (container.contains(toast)) {
         toast.style.animation = 'slide-in 0.3s reverse forwards ease-out';
@@ -1214,7 +1212,6 @@ const CRM = {
     const form = document.getElementById('lead-form');
     
     if (leadId) {
-      // Edit Mode
       const lead = this.state.leads.find(l => l.id === leadId);
       if (!lead) return;
       
@@ -1229,7 +1226,6 @@ const CRM = {
       document.getElementById('lead-stage').value = lead.stage;
       document.getElementById('lead-service').value = lead.service;
     } else {
-      // Create Mode
       document.getElementById('lead-modal-title').textContent = "Add New Lead";
       form.reset();
       document.getElementById('lead-id').value = '';
@@ -1244,7 +1240,6 @@ const CRM = {
     form.reset();
     document.getElementById('project-id').value = '';
     
-    // Set default deadline 60 days in future
     const dateInput = document.getElementById('project-deadline');
     const futureDate = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     dateInput.value = futureDate;
@@ -1265,7 +1260,6 @@ const CRM = {
     const form = document.getElementById('invoice-form');
     form.reset();
     
-    // Default due date to 14 days out
     const dueInput = document.getElementById('invoice-due');
     dueInput.value = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     
@@ -1276,7 +1270,6 @@ const CRM = {
      Global Listeners Wiring
      ========================================================================== */
   setupListeners() {
-    // 1. Sidebar Nav Navigation Links
     const menuLinks = document.querySelectorAll('.sidebar-menu .menu-item');
     menuLinks.forEach(link => {
       link.addEventListener('click', (e) => {
@@ -1286,7 +1279,6 @@ const CRM = {
       });
     });
 
-    // 2. Role Selector Switcher Event
     document.getElementById('role-select').addEventListener('change', (e) => {
       this.state.currentRole = e.target.value;
       localStorage.setItem('crm_role', e.target.value);
@@ -1294,7 +1286,6 @@ const CRM = {
       this.showToast(`Role profile switched to: ${e.target.options[e.target.selectedIndex].text}`, 'info');
     });
 
-    // 3. Theme Toggle Trigger
     document.getElementById('theme-toggle-btn').addEventListener('click', () => {
       if (document.body.classList.contains('dark-theme')) {
         document.body.classList.remove('dark-theme');
@@ -1310,12 +1301,10 @@ const CRM = {
       this.showToast(`Theme switched to ${this.state.theme} mode`, 'success');
     });
 
-    // 4. Logout Button
     document.getElementById('logout-btn').addEventListener('click', () => {
       Auth.logout();
     });
 
-    // 5. Quick Actions Trigger Open Main Hub Action Modal
     const quickAddBtn = document.getElementById('quick-add-btn');
     const quickModal = document.getElementById('quick-action-modal');
     
@@ -1323,7 +1312,6 @@ const CRM = {
       quickModal.classList.add('active');
     });
 
-    // Handle clicks inside Quick Action Hub
     const quickBtns = document.querySelectorAll('.quick-btn');
     quickBtns.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1336,17 +1324,14 @@ const CRM = {
       });
     });
 
-    // 5. Close Modals Buttons Handler
     const modalOverlays = document.querySelectorAll('.modal-overlay');
     modalOverlays.forEach(overlay => {
-      // Click on background
       overlay.addEventListener('click', (e) => {
         if (e.target === overlay) {
           overlay.classList.remove('active');
         }
       });
       
-      // Cancel buttons
       const cancelBtns = overlay.querySelectorAll('.cancel-btn');
       cancelBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1354,7 +1339,6 @@ const CRM = {
         });
       });
 
-      // Close 'x' button
       const closeBtn = overlay.querySelector('.close-modal-btn');
       if (closeBtn) {
         closeBtn.addEventListener('click', () => {
@@ -1363,14 +1347,11 @@ const CRM = {
       }
     });
 
-    // 6. Submit Forms Listeners (async to save to backend)
     // Lead Form
-    var lf = document.getElementById('lead-form');
-    lf.addEventListener('submit', async (e) => {
+    document.getElementById('lead-form').addEventListener('submit', (e) => {
       e.preventDefault();
-      var id = document.getElementById('lead-id').value;
-      var session = Auth.getSession();
-      var leadData = {
+      const id = document.getElementById('lead-id').value;
+      const leadData = {
         id: id || 'LD-' + Math.floor(Math.random() * 9000 + 1000),
         name: document.getElementById('lead-name').value,
         company: document.getElementById('lead-company').value,
@@ -1380,105 +1361,115 @@ const CRM = {
         region: document.getElementById('lead-region').value,
         stage: document.getElementById('lead-stage').value,
         service: document.getElementById('lead-service').value,
-        owner: session ? session.name : '',
-        score: 0,
         createdDate: new Date().toISOString().split('T')[0]
       };
 
-      if (!id) {
+      const isNew = !id;
+      
+      if (isNew) {
         this.state.leads.push(leadData);
-        this.showToast('Lead created', 'success');
+        this.saveState('leads');
+        this.showToast(`Lead created successfully`, 'success');
         AutomationEngine.trigger('leadCreated', leadData);
       } else {
-        var idx = this.state.leads.findIndex(l => l.id === id);
+        const idx = this.state.leads.findIndex(l => l.id === id);
         if (idx !== -1) {
-          var oldStage = this.state.leads[idx].stage;
+          const oldStage = this.state.leads[idx].stage;
           this.state.leads[idx] = leadData;
-          this.showToast('Lead updated', 'success');
+          this.saveState('leads');
+          this.showToast(`Lead details updated`, 'success');
+          
           if (leadData.stage === 'Won' && oldStage !== 'Won') {
             AutomationEngine.trigger('leadWon', leadData);
           }
         }
       }
-      try { await API.post('/api/leads', leadData); } catch (e) { console.error(e); }
+
+      this.loadState();
       document.getElementById('lead-modal').classList.remove('active');
       this.renderActiveView();
     });
 
     // Project Form
-    var pf = document.getElementById('project-form');
-    pf.addEventListener('submit', async (e) => {
+    document.getElementById('project-form').addEventListener('submit', (e) => {
       e.preventDefault();
-      var projectData = {
+      const projectData = {
         id: 'PRJ-' + Math.floor(Math.random() * 9000 + 1000),
         name: document.getElementById('project-name').value,
         client: document.getElementById('project-client').value,
-        company: document.getElementById('project-client').value,
-        status: 'Active',
-        progress: 0,
+        pm: document.getElementById('project-pm').value,
+        budget: parseFloat(document.getElementById('project-budget').value) || 0,
         deadline: document.getElementById('project-deadline').value,
-        team: document.getElementById('project-pm').value,
-        value: parseFloat(document.getElementById('project-budget').value) || 0,
-        priority: 'Medium',
-        createdDate: new Date().toISOString().split('T')[0]
+        milestones: [
+          { name: "Kickoff & Requirements", completed: false, completedDate: null },
+          { name: "Design & Implementation", completed: false, completedDate: null },
+          { name: "Testing & Handover", completed: false, completedDate: null }
+        ],
+        progress: 0,
+        status: 'Active'
       };
+
       this.state.projects.push(projectData);
-      this.showToast('Project created', 'success');
-      try { await API.post('/api/projects', projectData); } catch (e) { console.error(e); }
+      this.saveState('projects');
+      this.showToast(`Project created successfully`, 'success');
+      
       document.getElementById('project-modal').classList.remove('active');
       this.renderActiveView();
     });
 
     // Ticket Form
-    var tf = document.getElementById('ticket-form');
-    tf.addEventListener('submit', async (e) => {
+    document.getElementById('ticket-form').addEventListener('submit', (e) => {
       e.preventDefault();
-      var now = new Date().toISOString();
-      var ticketData = {
+      const ticketData = {
         id: 'TCK-' + Math.floor(Math.random() * 900 + 100),
         subject: document.getElementById('ticket-subject').value,
         client: document.getElementById('ticket-client').value,
-        priority: document.getElementById('ticket-priority').value,
         status: 'Open',
-        agent: 'Unassigned',
-        category: '',
-        createdDate: now,
-        lastUpdated: now
+        priority: document.getElementById('ticket-priority').value,
+        description: document.getElementById('ticket-description').value,
+        assignee: 'Unassigned',
+        createdTime: new Date().toISOString()
       };
+
       this.state.tickets.unshift(ticketData);
-      this.showToast('Ticket opened', 'success');
+      this.saveState('tickets');
+      this.showToast(`Ticket opened successfully`, 'success');
+      
       AutomationEngine.trigger('ticketCreated', ticketData);
-      AutomationEngine.logActivity('Service Request', 'New case ' + ticketData.id + ' from ' + ticketData.client, 'warning');
-      try { await API.post('/api/tickets', ticketData); } catch (e) { console.error(e); }
+      AutomationEngine.logActivity(
+        'Service Request',
+        `New support case <strong>${ticketData.id}</strong> ("${ticketData.subject}") filed by <strong>${ticketData.client}</strong>. SLA timer started.`,
+        'warning'
+      );
+
       document.getElementById('ticket-modal').classList.remove('active');
       this.renderActiveView();
     });
 
     // Invoice Form
-    var invf = document.getElementById('invoice-form');
-    invf.addEventListener('submit', async (e) => {
+    document.getElementById('invoice-form').addEventListener('submit', (e) => {
       e.preventDefault();
-      var invoiceData = {
+      const invoiceData = {
         id: 'INV-' + Math.floor(Math.random() * 90000 + 10000),
-        projectId: '',
+        projectId: null,
         client: document.getElementById('invoice-client').value,
         project: document.getElementById('invoice-project').value || 'Manual Service Billing',
-        milestone: 'Manual entry',
+        milestone: 'Manual ledger entry',
         amount: parseFloat(document.getElementById('invoice-amount').value) || 0,
         issueDate: new Date().toISOString().split('T')[0],
         dueDate: document.getElementById('invoice-due').value,
         status: 'Pending'
       };
+
       this.state.invoices.push(invoiceData);
-      this.showToast('Invoice registered', 'success');
-      try { await API.post('/api/invoices', invoiceData); } catch (e) { console.error(e); }
+      this.saveState('invoices');
+      this.showToast(`Manual invoice registered`, 'success');
+      
       document.getElementById('invoice-modal').classList.remove('active');
       this.renderActiveView();
     });
 
-    // 7. Automation events sync listener
     window.addEventListener('automation-log-added', (e) => {
-      // If we are currently viewing the Dashboard or Workflows page, update the HTML log logs stream
       if (this.state.currentView === 'dashboard') {
         const list = document.getElementById('dashboard-log-list');
         if (list) {
@@ -1493,7 +1484,6 @@ const CRM = {
             </div>
           `;
           list.insertBefore(logItem, list.firstChild);
-          // Keep last 100
           if (list.children.length > 100) {
             list.lastChild.remove();
           }
