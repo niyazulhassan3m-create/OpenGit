@@ -316,7 +316,7 @@ const CRM = {
 
   // Central rendering orchestrator based on current view
   renderActiveView() {
-    const target = document.getElementById('view-content');
+    const target = document.getElementById('main-content-view');
     target.scrollTop = 0;
 
     switch (this.state.currentView) {
@@ -350,8 +350,8 @@ const CRM = {
     const session = Auth.getSession();
     const userName = session ? session.name : 'User';
     const roleDisplay = Auth.getRoleName(this.state.currentRole);
-    document.getElementById('sidebar-user-name').textContent = userName;
-    document.getElementById('sidebar-user-role').textContent = roleDisplay;
+    document.getElementById('current-user-name').textContent = userName;
+    document.getElementById('current-user-role-lbl').textContent = roleDisplay;
     document.getElementById('role-select').value = this.state.currentRole;
 
     // Show/hide menu items based on permissions
