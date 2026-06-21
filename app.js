@@ -5,6 +5,8 @@
 // ==========================================================================
 // Auth Manager - Login / Signup System
 // ==========================================================================
+
+if (!localStorage.getItem('crm_session')) { alert('App.js loaded! JS working!'); }
 const Auth = {
   usersKey: 'crm_users',
   sessionKey: 'crm_session',
