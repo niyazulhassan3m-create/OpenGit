@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniCRM - Service Provider Operations Hub</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+  <!-- Notification Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-logo">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="32" height="32" rx="8" fill="url(#brand-grad)"/>
+            <path d="M9 16C9 12.134 12.134 9 16 9C19.866 9 23 12.134 23 16C23 19.866 19.866 23 16 23C12.134 23 9 19.866 9 16Z" stroke="white" stroke-width="2" stroke-dasharray="4 2"/>
+            <circle cx="16" cy="16" r="4" fill="white"/>
+            <defs>
+              <linearGradient id="brand-grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#8B5CF6"/>
+                <stop offset="1" stop-color="#3B82F6"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <span class="brand-name">OmniCRM</span>
+      </div>
+
+      <nav class="sidebar-menu">
+        <a href="#dashboard" class="menu-item active" data-view="dashboard">
+          <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="#leads" class="menu-item" data-view="leads" data-perm="leads">
+          <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Leads & Pipeline</span>
+        </a>
+        <a href="#accounts" class="menu-item" data-view="accounts" data-perm="accounts">
+          <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          <span>Accounts & Contacts</span>
+        </a>
+        <a href="#projects" class="menu-item" data-view="projects" data-perm="projects">
+          <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><path d="M12 11v6"></path><path d="M9 14h6"></path></svg>
+          <span>Project Tracking</span>
+        </a>
+        <a href="#tickets" class="menu-item" data-view="tickets" data-perm="tickets">
+          <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>Service Requests</span>
+        </a>
+        <a href="#invoices" class="menu-item" data-view="invoices" data-perm="invoices">
+          <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <span>Invoices & Payments</span>
+        </a>
+        <a href="#workflows" class="menu-item" data-view="workflows">
+          <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Workflows & Rules</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar" id="current-user-avatar">M</div>
+          <div class="user-info">
+            <span class="user-name" id="current-user-name">Sarah Jenkins</span>
+            <span class="user-role-badge" id="current-user-role-lbl">Management</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="main-workspace">
+      <!-- Header -->
+      <header class="app-header">
+        <div class="header-left">
+          <h1 class="page-title" id="page-title">Dashboard</h1>
+          <span class="system-date" id="system-date">Sunday, June 21, 2026</span>
+        </div>
+
+        <div class="header-right">
+          <!-- Role Switcher -->
+          <div class="control-group">
+            <label for="role-select" class="control-label">Acting Role:</label>
+            <div class="select-wrapper">
+              <select id="role-select" class="role-selector">
+                <option value="management" selected>Management (Admin)</option>
+                <option value="sales">Sales Team</option>
+                <option value="service">Service Delivery Team</option>
+                <option value="finance">Finance Team</option>
+                <option value="support">Customer Support Team</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Theme Toggle -->
+          <button id="theme-toggle-btn" class="icon-btn theme-toggle" title="Toggle Theme">
+            <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
+
+          <!-- Quick Add Button -->
+          <button id="quick-add-btn" class="btn btn-primary btn-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Quick Action</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Dynamic Content Wrapper -->
+      <section class="content-body" id="main-content-view">
+        <!-- Views will be dynamically loaded here by app.js -->
+      </section>
+    </main>
+  </div>
+
+  <!-- MODALS -->
+
+  <!-- Quick Action Menu Modal -->
+  <div id="quick-action-modal" class="modal-overlay">
+    <div class="modal-card modal-sm">
+      <div class="modal-header">
+        <h3>Create Record</h3>
+        <button class="close-modal-btn">&times;</button>
+      </div>
+      <div class="modal-body quick-action-grid">
+        <button class="quick-btn" data-action="new-lead">
+          <div class="quick-icon-bg lead-bg">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          </div>
+          <span>New Lead</span>
+        </button>
+        <button class="quick-btn" data-action="new-project">
+          <div class="quick-icon-bg project-bg">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <span>New Project</span>
+        </button>
+        <button class="quick-btn" data-action="new-ticket">
+          <div class="quick-icon-bg support-bg">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <span>New Ticket</span>
+        </button>
+        <button class="quick-btn" data-action="new-invoice">
+          <div class="quick-icon-bg finance-bg">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <span>New Invoice</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Lead Modal -->
+  <div id="lead-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="lead-modal-title">Add New Lead</h3>
+        <button class="close-modal-btn">&times;</button>
+      </div>
+      <form id="lead-form">
+        <input type="hidden" id="lead-id">
+        <div class="modal-body form-grid">
+          <div class="form-group col-2">
+            <label for="lead-name" class="required">Lead Name</label>
+            <input type="text" id="lead-name" placeholder="John Doe" required>
+          </div>
+          <div class="form-group col-2">
+            <label for="lead-company" class="required">Company</label>
+            <input type="text" id="lead-company" placeholder="Acme Corp" required>
+          </div>
+          <div class="form-group">
+            <label for="lead-email" class="required">Email Address</label>
+            <input type="email" id="lead-email" placeholder="john@company.com" required>
+          </div>
+          <div class="form-group">
+            <label for="lead-phone">Phone Number</label>
+            <input type="tel" id="lead-phone" placeholder="+1 (555) 019-2834">
+          </div>
+          <div class="form-group">
+            <label for="lead-value" class="required">Est. Value ($)</label>
+            <input type="number" id="lead-value" min="0" value="5000" required>
+          </div>
+          <div class="form-group">
+            <label for="lead-region">Region</label>
+            <select id="lead-region">
+              <option value="North America">North America</option>
+              <option value="Europe">Europe</option>
+              <option value="Asia-Pacific">Asia-Pacific</option>
+              <option value="Latin America">Latin America</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="lead-stage">Lead Stage</label>
+            <select id="lead-stage">
+              <option value="New">New</option>
+              <option value="Contacted">Contacted</option>
+              <option value="Qualified">Qualified</option>
+              <option value="Proposal">Proposal</option>
+              <option value="Won">Won (Deal Closed)</option>
+              <option value="Lost">Lost</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="lead-service">Service Category</label>
+            <select id="lead-service">
+              <option value="Cloud Migration">Cloud Migration</option>
+              <option value="IT Consulting">IT Consulting</option>
+              <option value="Software Development">Software Development</option>
+              <option value="Digital Marketing">Digital Marketing</option>
+              <option value="Cybersecurity Audit">Cybersecurity Audit</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Lead</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Create Project Modal -->
+  <div id="project-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="project-modal-title">Create New Project</h3>
+        <button class="close-modal-btn">&times;</button>
+      </div>
+      <form id="project-form">
+        <input type="hidden" id="project-id">
+        <div class="modal-body form-grid">
+          <div class="form-group col-2">
+            <label for="project-name" class="required">Project Name</label>
+            <input type="text" id="project-name" placeholder="E.g., Cloud Migration Phase 2" required>
+          </div>
+          <div class="form-group">
+            <label for="project-client" class="required">Client Company</label>
+            <input type="text" id="project-client" placeholder="Client Corp" required>
+          </div>
+          <div class="form-group">
+            <label for="project-pm" class="required">Project Manager</label>
+            <input type="text" id="project-pm" placeholder="Alex Rivera" required>
+          </div>
+          <div class="form-group">
+            <label for="project-budget" class="required">Budget ($)</label>
+            <input type="number" id="project-budget" min="0" value="10000" required>
+          </div>
+          <div class="form-group">
+            <label for="project-deadline" class="required">Deadline</label>
+            <input type="date" id="project-deadline" required>
+          </div>
+          <div class="form-group col-2">
+            <label>Project Milestones (Completed sequentially)</label>
+            <div class="milestones-setup-list">
+              <div class="milestone-row">
+                <span class="m-num">1</span>
+                <input type="text" class="m-input" value="Kickoff & Requirements" readonly>
+              </div>
+              <div class="milestone-row">
+                <span class="m-num">2</span>
+                <input type="text" class="m-input" value="Implementation & Coding" readonly>
+              </div>
+              <div class="milestone-row">
+                <span class="m-num">3</span>
+                <input type="text" class="m-input" value="Testing & Deployment" readonly>
+              </div>
+            </div>
+            <p class="helper-text">Each milestone completed will trigger automated invoicing (33% of budget per milestone).</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Project</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Create Ticket Modal -->
+  <div id="ticket-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="ticket-modal-title">Open Support Ticket</h3>
+        <button class="close-modal-btn">&times;</button>
+      </div>
+      <form id="ticket-form">
+        <input type="hidden" id="ticket-id">
+        <div class="modal-body form-grid">
+          <div class="form-group col-2">
+            <label for="ticket-subject" class="required">Subject</label>
+            <input type="text" id="ticket-subject" placeholder="E.g., Server API returning 500 error" required>
+          </div>
+          <div class="form-group">
+            <label for="ticket-client" class="required">Customer / Company</label>
+            <input type="text" id="ticket-client" placeholder="Customer Corp" required>
+          </div>
+          <div class="form-group">
+            <label for="ticket-priority" class="required">Priority</label>
+            <select id="ticket-priority">
+              <option value="Low">Low (24hr SLA)</option>
+              <option value="Medium" selected>Medium (8hr SLA)</option>
+              <option value="High">High (4hr SLA)</option>
+              <option value="Urgent">Urgent (2hr SLA)</option>
+            </select>
+          </div>
+          <div class="form-group col-2">
+            <label for="ticket-description">Description of Issue</label>
+            <textarea id="ticket-description" rows="4" placeholder="Detail the support request..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Submit Ticket</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Create Invoice Modal -->
+  <div id="invoice-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Create Manual Invoice</h3>
+        <button class="close-modal-btn">&times;</button>
+      </div>
+      <form id="invoice-form">
+        <div class="modal-body form-grid">
+          <div class="form-group col-2">
+            <label for="invoice-client" class="required">Client Company</label>
+            <input type="text" id="invoice-client" placeholder="Client Corp" required>
+          </div>
+          <div class="form-group">
+            <label for="invoice-project">Associated Project</label>
+            <input type="text" id="invoice-project" placeholder="E.g., Cloud Migration (Optional)">
+          </div>
+          <div class="form-group">
+            <label for="invoice-amount" class="required">Amount ($)</label>
+            <input type="number" id="invoice-amount" min="0" value="1500" required>
+          </div>
+          <div class="form-group">
+            <label for="invoice-due">Due Date</label>
+            <input type="date" id="invoice-due" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Generate Invoice</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- View Invoice Details / PDF Modal -->
+  <div id="invoice-view-modal" class="modal-overlay">
+    <div class="modal-card invoice-details-card">
+      <div class="modal-header no-border">
+        <span class="invoice-badge paid" id="modal-invoice-status">PAID</span>
+        <button class="close-modal-btn">&times;</button>
+      </div>
+      <div class="modal-body invoice-printable" id="invoice-print-area">
+        <!-- Dynamic invoice details render -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary cancel-btn">Close</button>
+        <button type="button" class="btn btn-primary" onclick="window.print()">Print / Download PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Core Javascript Modules -->
+  <script src="automation.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
