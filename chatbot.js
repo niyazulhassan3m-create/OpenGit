@@ -101,7 +101,7 @@ const AIAssistant = {
 
     // Lead count
     if (q.match(/how many leads|lead count|total leads|leads irukku/)) {
-      const leads = JSON.parse(localStorage.getItem('crm_leads') || '[]');
+      const leads = (CRM && CRM.state.leads) || [];
       const won = leads.filter(l => l.stage === 'Won').length;
       const lost = leads.filter(l => l.stage === 'Lost').length;
       const active = leads.filter(l => l.stage !== 'Won' && l.stage !== 'Lost').length;
@@ -113,7 +113,7 @@ const AIAssistant = {
 
     // Projects
     if (q.match(/projects|project list|show projects/)) {
-      const projects = JSON.parse(localStorage.getItem('crm_projects') || '[]');
+      const projects = (CRM && CRM.state.projects) || [];
       if (projects.length === 0) return 'No projects yet. Won leads-a projects automatically create aagum!';
       return projects.map(p =>
         `<strong>${p.name}</strong> - ${p.status} (${p.progress}%)`
@@ -122,7 +122,7 @@ const AIAssistant = {
 
     // Revenue
     if (q.match(/revenue|total revenue|income|sales revenue/)) {
-      const leads = JSON.parse(localStorage.getItem('crm_leads') || '[]');
+      const leads = (CRM && CRM.state.leads) || [];
       const won = leads.filter(l => l.stage === 'Won');
       const total = won.reduce((a, b) => a + (parseFloat(b.value) || 0), 0);
       return `<strong>Total Won Revenue:</strong> $${total.toLocaleString()}<br>
@@ -131,7 +131,7 @@ const AIAssistant = {
 
     // Tickets
     if (q.match(/tickets|open tickets|support tickets/)) {
-      const tickets = JSON.parse(localStorage.getItem('crm_tickets') || '[]');
+      const tickets = (CRM && CRM.state.tickets) || [];
       const open = tickets.filter(t => t.status !== 'Resolved').length;
       const total = tickets.length;
       return `<strong>Total Tickets:</strong> ${total}<br>
@@ -141,7 +141,7 @@ const AIAssistant = {
 
     // Invoices
     if (q.match(/invoices|invoice|payment/)) {
-      const invoices = JSON.parse(localStorage.getItem('crm_invoices') || '[]');
+      const invoices = (CRM && CRM.state.invoices) || [];
       const paid = invoices.filter(i => i.status === 'Paid').length;
       const pending = invoices.filter(i => i.status === 'Pending').length;
       const totalAmt = invoices.reduce((a, b) => a + (parseFloat(b.amount) || 0), 0);
@@ -152,15 +152,15 @@ const AIAssistant = {
     }
 
     // Accounts
-    if (q.match(/accounts|customers|clients/)) {
-      const accounts = JSON.parse(localStorage.getItem('crm_accounts') || '[]');
+    if (q.match(/accounts|account|clients|client list/)) {
+      const accounts = (CRM && CRM.state.accounts) || [];
       if (accounts.length === 0) return 'No accounts yet.';
       return accounts.map(a => `<strong>${a.name}</strong> - ${a.service} (${a.region})`).join('<br>');
     }
 
     // Role / Who am I
     if (q.match(/who am i|my role|current role/)) {
-      const role = localStorage.getItem('crm_role') || 'management';
+      const role = (CRM && CRM.state.currentRole) || localStorage.getItem('crm_role') || 'management';
       const roleNames = { management: 'Management (Admin)', sales: 'Sales Team', service: 'Service Delivery', finance: 'Finance Team', support: 'Customer Support' };
       return `You are logged in as: <strong>${roleNames[role] || role}</strong>`;
     }

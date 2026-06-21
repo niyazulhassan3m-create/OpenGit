@@ -33,13 +33,23 @@ const AutomationEngine = {
       timestamp: new Date().toISOString(),
       workflow: workflowName,
       message: message,
-      type: type // 'success', 'warning', 'info'
+      type: type
     };
     logs.unshift(newLog);
-    // Keep last 100 logs
     localStorage.setItem('crm_automation_logs', JSON.stringify(logs.slice(0, 100)));
     
-    // Dispatch custom event to notify main app
+    // Also save to backend (fire-and-forget)
+    try {
+      var token = localStorage.getItem('crm_token');
+      if (token) {
+        fetch('/api/automation-logs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ workflow: workflowName, message: message, type: type })
+        });
+      }
+    } catch(e) {}
+    
     window.dispatchEvent(new CustomEvent('automation-log-added', { detail: newLog }));
   },
 

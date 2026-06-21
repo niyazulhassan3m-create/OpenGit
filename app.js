@@ -7,65 +7,6 @@
 // ==========================================================================
 
 const Auth = {
-  usersKey: 'crm_users',
-  sessionKey: 'crm_session',
-
-  // Pre-create demo users for each department
-  seedUsers() {
-    if (localStorage.getItem(this.usersKey)) return;
-    const users = [
-      { id: 'USR-001', name: 'Sarah Jenkins', email: 'admin@omnicrm.com', password: 'admin123', role: 'management' },
-      { id: 'USR-002', name: 'Marcus Vance', email: 'sales@omnicrm.com', password: 'sales123', role: 'sales' },
-      { id: 'USR-003', name: 'Devin Carter', email: 'service@omnicrm.com', password: 'service123', role: 'service' },
-      { id: 'USR-004', name: 'Helena Rostova', email: 'finance@omnicrm.com', password: 'finance123', role: 'finance' },
-      { id: 'USR-005', name: 'Alex Rivera', email: 'support@omnicrm.com', password: 'support123', role: 'support' }
-    ];
-    localStorage.setItem(this.usersKey, JSON.stringify(users));
-  },
-
-  // Register a new user
-  register(name, email, password, role) {
-    const users = JSON.parse(localStorage.getItem(this.usersKey) || '[]');
-    if (users.find(u => u.email === email)) {
-      return { success: false, msg: 'Email already registered!' };
-    }
-    const newUser = {
-      id: 'USR-' + Math.floor(Math.random() * 90000 + 10000),
-      name, email, password, role
-    };
-    users.push(newUser);
-    localStorage.setItem(this.usersKey, JSON.stringify(users));
-    return { success: true, msg: 'Account created! Please sign in.' };
-  },
-
-  // Login
-  login(email, password) {
-    const users = JSON.parse(localStorage.getItem(this.usersKey) || '[]');
-    const user = users.find(u => u.email === email && u.password === password);
-    if (!user) {
-      return { success: false, msg: 'Invalid email or password!' };
-    }
-    const session = { userId: user.id, name: user.name, email: user.email, role: user.role };
-    localStorage.setItem(this.sessionKey, JSON.stringify(session));
-    return { success: true, user: session };
-  },
-
-  // Logout
-  logout() {
-    localStorage.removeItem(this.sessionKey);
-    location.reload();
-  },
-
-  // Check current session
-  getSession() {
-    const data = localStorage.getItem(this.sessionKey);
-    return data ? JSON.parse(data) : null;
-  },
-
-  isLoggedIn() {
-    return !!this.getSession();
-  },
-
   getRoleName(role) {
     const names = {
       management: 'Management (Admin)',
@@ -75,62 +16,31 @@ const Auth = {
       support: 'Customer Support'
     };
     return names[role] || role;
+  },
+
+  async login(email, password) {
+    return await API.login(email, password);
+  },
+
+  async register(name, email, password, role) {
+    return await API.register(name, email, password, role);
+  },
+
+  logout() {
+    API.logout();
+    location.reload();
+  },
+
+  getSession() {
+    return API.getStoredUser();
+  },
+
+  isLoggedIn() {
+    return API.isLoggedIn();
   }
 };
 
-// 1. Initial Mock Data Setup (Database)
-const INITIAL_LEADS = [
-  { id: 'LD-8342', name: 'John Peterson', company: 'Apex Global', email: 'j.peterson@apex.com', phone: '+1 (555) 012-9988', value: 45000, region: 'North America', stage: 'Qualified', service: 'Cloud Migration', owner: 'Sarah Jenkins', score: 80, createdDate: '2026-06-18' },
-  { id: 'LD-9271', name: 'Sophie Dubois', company: 'Lumiere Fashion', email: 's.dubois@lumiere.fr', phone: '+33 1 42 68 53 11', value: 12000, region: 'Europe', stage: 'Contacted', service: 'Digital Marketing', owner: 'Hans Schmidt', score: 60, createdDate: '2026-06-19' },
-  { id: 'LD-3051', name: 'Kenji Sato', company: 'Nippon Logistics', email: 'k.sato@nippon-log.jp', phone: '+81 3 5555 0143', value: 85000, region: 'Asia-Pacific', stage: 'Proposal', service: 'Software Development', owner: 'Mei Ling', score: 90, createdDate: '2026-06-15' },
-  { id: 'LD-4412', name: 'Camila Gomez', company: 'Soluciones Agri', email: 'c.gomez@solagri.cl', phone: '+56 2 2580 9100', value: 7500, region: 'Latin America', stage: 'New', service: 'Cybersecurity Audit', owner: 'Carlos Silva', score: 40, createdDate: '2026-06-21' },
-  { id: 'LD-5288', name: 'Robert Chen', company: 'Pacific Tech', email: 'r.chen@pactech.com', phone: '+1 (555) 303-4921', value: 62000, region: 'North America', stage: 'Won', service: 'Software Development', owner: 'Sarah Jenkins', score: 100, createdDate: '2026-06-10' }
-];
-
-const INITIAL_PROJECTS = [
-  {
-    id: 'PRJ-1024',
-    leadId: 'LD-5288',
-    name: 'Software Development - Pacific Tech',
-    client: 'Pacific Tech',
-    pm: 'Devin Carter (Dev PM)',
-    budget: 62000,
-    deadline: '2026-08-10',
-    milestones: [
-      { name: "Kickoff & Requirements", completed: true, completedDate: '2026-06-12' },
-      { name: "Design & Implementation", completed: false, completedDate: null },
-      { name: "Testing & Handover", completed: false, completedDate: null }
-    ],
-    progress: 33,
-    status: 'Active'
-  }
-];
-
-const INITIAL_ACCOUNTS = [
-  {
-    id: 'ACC-3941',
-    name: 'Pacific Tech',
-    email: 'r.chen@pactech.com',
-    phone: '+1 (555) 303-4921',
-    region: 'North America',
-    service: 'Software Development',
-    createdDate: '2026-06-10',
-    timeline: [
-      { title: "Account Established", date: '2026-06-10', description: "Account created upon deal closing." },
-      { title: "Project Initiated", date: '2026-06-11', description: "V1 project schedule created automatically." },
-      { title: "Kickoff Milestone Completed", date: '2026-06-12', description: "First milestone checklist marked completed by Devin Carter." }
-    ]
-  }
-];
-
-const INITIAL_TICKETS = [
-  { id: 'TCK-201', subject: 'Server connection latency peak', client: 'Apex Global', status: 'Open', priority: 'High', description: 'Web client reports spikes of up to 4s load times on backend database query APIs.', assignee: 'Devin Carter', createdTime: new Date(Date.now() - 4.5 * 60 * 60 * 1000).toISOString() }, // 4.5 hours ago
-  { id: 'TCK-202', subject: 'Password reset failure in customer portal', client: 'Lumiere Fashion', status: 'In Progress', priority: 'Medium', description: 'User does not receive SMTP verification email code.', assignee: 'Sarah Jenkins', createdTime: new Date(Date.now() - 2.5 * 60 * 60 * 1000).toISOString() } // 2.5 hours ago
-];
-
-const INITIAL_INVOICES = [
-  { id: 'INV-40122', projectId: 'PRJ-1024', client: 'Pacific Tech', project: 'Software Development - Pacific Tech', milestone: 'Kickoff & Requirements', amount: 20666.67, issueDate: '2026-06-12', dueDate: '2026-06-26', status: 'Paid' }
-];
+// Data now comes from backend API (db.js seeds it)
 
 // 2. State Controller
 const CRM = {
@@ -155,9 +65,7 @@ const CRM = {
     support: ['dashboard', 'accounts', 'tickets']
   },
 
-  init() {
-    Auth.seedUsers();
-
+  async init() {
     const session = Auth.getSession();
     if (!session) {
       this.initLoginPage();
@@ -168,7 +76,7 @@ const CRM = {
     this.state.currentRole = session.role;
     localStorage.setItem('crm_role', session.role);
 
-    this.loadState();
+    await this.loadState();
     this.setupListeners();
     this.startTimers();
     this.renderActiveView();
@@ -244,26 +152,18 @@ const CRM = {
     });
   },
 
-  // Load state from localStorage or populate defaults
-  loadState() {
-    if (!localStorage.getItem('crm_leads')) {
-      localStorage.setItem('crm_leads', JSON.stringify(INITIAL_LEADS));
-      localStorage.setItem('crm_projects', JSON.stringify(INITIAL_PROJECTS));
-      localStorage.setItem('crm_accounts', JSON.stringify(INITIAL_ACCOUNTS));
-      localStorage.setItem('crm_tickets', JSON.stringify(INITIAL_TICKETS));
-      localStorage.setItem('crm_invoices', JSON.stringify(INITIAL_INVOICES));
-      localStorage.setItem('crm_tasks', JSON.stringify([]));
-      localStorage.setItem('crm_automation_logs', JSON.stringify([
-        { id: 'LOG-001', timestamp: new Date().toISOString(), workflow: 'System Init', message: 'OmniCRM system databases populated with mock startup templates.', type: 'info' }
-      ]));
+  // Load state from API
+  async loadState() {
+    try {
+      this.state.leads = await API.get('/api/leads');
+      this.state.projects = await API.get('/api/projects');
+      this.state.accounts = await API.get('/api/accounts');
+      this.state.tickets = await API.get('/api/tickets');
+      this.state.invoices = await API.get('/api/invoices');
+      this.state.tasks = await API.get('/api/tasks');
+    } catch (e) {
+      console.error('Failed to load data:', e);
     }
-    
-    this.state.leads = JSON.parse(localStorage.getItem('crm_leads'));
-    this.state.projects = JSON.parse(localStorage.getItem('crm_projects'));
-    this.state.accounts = JSON.parse(localStorage.getItem('crm_accounts'));
-    this.state.tickets = JSON.parse(localStorage.getItem('crm_tickets'));
-    this.state.invoices = JSON.parse(localStorage.getItem('crm_invoices'));
-    this.state.tasks = JSON.parse(localStorage.getItem('crm_tasks'));
     
     const savedTheme = localStorage.getItem('crm_theme') || 'dark';
     this.state.theme = savedTheme;
@@ -277,8 +177,19 @@ const CRM = {
     document.getElementById('role-select').value = savedRole;
   },
 
-  saveState(key) {
-    localStorage.setItem(`crm_${key}`, JSON.stringify(this.state[key]));
+  // Save to backend via API
+  async saveToApi(key, item) {
+    if (!item) {
+      const items = this.state[key];
+      if (!items) return;
+      for (const it of items) {
+        try { await API.put(`/api/${key}/${it.id}`, it); }
+        catch { try { await API.post(`/api/${key}`, it); } catch {} }
+      }
+      return;
+    }
+    try { await API.put(`/api/${key}/${item.id}`, item); }
+    catch { try { await API.post(`/api/${key}`, item); } catch (e) { console.error(`Failed to save ${key}:`, e); } }
   },
 
   updateSystemDate() {
@@ -744,7 +655,7 @@ const CRM = {
       description: desc
     });
 
-    this.saveState('accounts');
+    this.saveToApi('accounts');
     this.showAccountDetails(accountId);
     this.showToast(`${type} logged successfully`, 'success');
   },
@@ -818,7 +729,7 @@ const CRM = {
       project.status = 'Completed';
     }
 
-    this.saveState('projects');
+    this.saveToApi('projects');
     this.showToast(`Milestone completed successfully`, 'success');
 
     // Trigger Invoice Automation trigger
@@ -895,7 +806,7 @@ const CRM = {
     if (!ticket) return;
 
     ticket.status = 'Resolved';
-    this.saveState('tickets');
+    this.saveToApi('tickets');
     this.showToast(`Ticket ${ticketId} marked resolved`, 'success');
     
     // Log resolution to automation log
@@ -921,7 +832,7 @@ const CRM = {
       case 'finance': ticket.assignee = "Helena Rostova"; break;
       case 'support': ticket.assignee = "Alex Rivera"; break;
     }
-    this.saveState('tickets');
+    this.saveToApi('tickets');
     this.showToast(`Ticket ${ticketId} assigned and marked In Progress`, 'success');
     this.renderActiveView();
   },
@@ -1034,7 +945,7 @@ const CRM = {
     if (!inv) return;
 
     inv.status = 'Paid';
-    this.saveState('invoices');
+    this.saveToApi('invoices');
     this.showToast(`Payment recorded for Invoice ${invoiceId}`, 'success');
     
     // Log payment
@@ -1248,7 +1159,7 @@ const CRM = {
      ========================================================================== */
   
   // Lead Status Modification
-  moveLeadStage(leadId, dir) {
+  async moveLeadStage(leadId, dir) {
     const lead = this.state.leads.find(l => l.id === leadId);
     if (!lead) return;
 
@@ -1260,13 +1171,12 @@ const CRM = {
     
     const prevStage = lead.stage;
     lead.stage = stages[newIdx];
-    this.saveState('leads');
     this.showToast(`Lead status updated to ${lead.stage}`, 'success');
+    try { await API.put('/api/leads/' + lead.id, lead); } catch (e) { console.error(e); }
 
-    // If transitioned to Won, run Project trigger
     if (lead.stage === 'Won' && prevStage !== 'Won') {
       AutomationEngine.trigger('leadWon', lead);
-      this.loadState(); // reload newly spawned projects/accounts
+      await this.loadState();
     }
     if (lead.stage === 'Lost' && prevStage !== 'Lost') {
       AutomationEngine.trigger('leadLost', lead);
@@ -1452,12 +1362,14 @@ const CRM = {
       }
     });
 
-    // 6. Submit Forms Listeners
+    // 6. Submit Forms Listeners (async to save to backend)
     // Lead Form
-    document.getElementById('lead-form').addEventListener('submit', (e) => {
+    var lf = document.getElementById('lead-form');
+    lf.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const id = document.getElementById('lead-id').value;
-      const leadData = {
+      var id = document.getElementById('lead-id').value;
+      var session = Auth.getSession();
+      var leadData = {
         id: id || 'LD-' + Math.floor(Math.random() * 9000 + 1000),
         name: document.getElementById('lead-name').value,
         company: document.getElementById('lead-company').value,
@@ -1467,111 +1379,98 @@ const CRM = {
         region: document.getElementById('lead-region').value,
         stage: document.getElementById('lead-stage').value,
         service: document.getElementById('lead-service').value,
+        owner: session ? session.name : '',
+        score: 0,
         createdDate: new Date().toISOString().split('T')[0]
       };
 
-      const isNew = !id;
-      
-      if (isNew) {
+      if (!id) {
         this.state.leads.push(leadData);
-        this.saveState('leads');
-        this.showToast(`Lead created successfully`, 'success');
-        // Trigger leadCreated automation hook
+        this.showToast('Lead created', 'success');
         AutomationEngine.trigger('leadCreated', leadData);
       } else {
-        const idx = this.state.leads.findIndex(l => l.id === id);
+        var idx = this.state.leads.findIndex(l => l.id === id);
         if (idx !== -1) {
-          const oldStage = this.state.leads[idx].stage;
+          var oldStage = this.state.leads[idx].stage;
           this.state.leads[idx] = leadData;
-          this.saveState('leads');
-          this.showToast(`Lead details updated`, 'success');
-          
+          this.showToast('Lead updated', 'success');
           if (leadData.stage === 'Won' && oldStage !== 'Won') {
             AutomationEngine.trigger('leadWon', leadData);
           }
         }
       }
-
-      this.loadState(); // Refresh local datasets
+      try { await API.post('/api/leads', leadData); } catch (e) { console.error(e); }
       document.getElementById('lead-modal').classList.remove('active');
       this.renderActiveView();
     });
 
     // Project Form
-    document.getElementById('project-form').addEventListener('submit', (e) => {
+    var pf = document.getElementById('project-form');
+    pf.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const projectData = {
+      var projectData = {
         id: 'PRJ-' + Math.floor(Math.random() * 9000 + 1000),
         name: document.getElementById('project-name').value,
         client: document.getElementById('project-client').value,
-        pm: document.getElementById('project-pm').value,
-        budget: parseFloat(document.getElementById('project-budget').value) || 0,
-        deadline: document.getElementById('project-deadline').value,
-        milestones: [
-          { name: "Kickoff & Requirements", completed: false, completedDate: null },
-          { name: "Design & Implementation", completed: false, completedDate: null },
-          { name: "Testing & Handover", completed: false, completedDate: null }
-        ],
+        company: document.getElementById('project-client').value,
+        status: 'Active',
         progress: 0,
-        status: 'Active'
+        deadline: document.getElementById('project-deadline').value,
+        team: document.getElementById('project-pm').value,
+        value: parseFloat(document.getElementById('project-budget').value) || 0,
+        priority: 'Medium',
+        createdDate: new Date().toISOString().split('T')[0]
       };
-
       this.state.projects.push(projectData);
-      this.saveState('projects');
-      this.showToast(`Project created successfully`, 'success');
-      
+      this.showToast('Project created', 'success');
+      try { await API.post('/api/projects', projectData); } catch (e) { console.error(e); }
       document.getElementById('project-modal').classList.remove('active');
       this.renderActiveView();
     });
 
     // Ticket Form
-    document.getElementById('ticket-form').addEventListener('submit', (e) => {
+    var tf = document.getElementById('ticket-form');
+    tf.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const ticketData = {
+      var now = new Date().toISOString();
+      var ticketData = {
         id: 'TCK-' + Math.floor(Math.random() * 900 + 100),
         subject: document.getElementById('ticket-subject').value,
         client: document.getElementById('ticket-client').value,
-        status: 'Open',
         priority: document.getElementById('ticket-priority').value,
-        description: document.getElementById('ticket-description').value,
-        assignee: 'Unassigned',
-        createdTime: new Date().toISOString()
+        status: 'Open',
+        agent: 'Unassigned',
+        category: '',
+        createdDate: now,
+        lastUpdated: now
       };
-
       this.state.tickets.unshift(ticketData);
-      this.saveState('tickets');
-      this.showToast(`Ticket opened successfully`, 'success');
-      
+      this.showToast('Ticket opened', 'success');
       AutomationEngine.trigger('ticketCreated', ticketData);
-      AutomationEngine.logActivity(
-        'Service Request',
-        `New support case <strong>${ticketData.id}</strong> ("${ticketData.subject}") filed by <strong>${ticketData.client}</strong>. SLA timer started.`,
-        'warning'
-      );
-
+      AutomationEngine.logActivity('Service Request', 'New case ' + ticketData.id + ' from ' + ticketData.client, 'warning');
+      try { await API.post('/api/tickets', ticketData); } catch (e) { console.error(e); }
       document.getElementById('ticket-modal').classList.remove('active');
       this.renderActiveView();
     });
 
     // Invoice Form
-    document.getElementById('invoice-form').addEventListener('submit', (e) => {
+    var invf = document.getElementById('invoice-form');
+    invf.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const invoiceData = {
+      var invoiceData = {
         id: 'INV-' + Math.floor(Math.random() * 90000 + 10000),
-        projectId: null,
+        projectId: '',
         client: document.getElementById('invoice-client').value,
         project: document.getElementById('invoice-project').value || 'Manual Service Billing',
-        milestone: 'Manual ledger entry',
+        milestone: 'Manual entry',
         amount: parseFloat(document.getElementById('invoice-amount').value) || 0,
         issueDate: new Date().toISOString().split('T')[0],
         dueDate: document.getElementById('invoice-due').value,
         status: 'Pending'
       };
-
       this.state.invoices.push(invoiceData);
-      this.saveState('invoices');
-      this.showToast(`Manual invoice registered`, 'success');
-      
+      this.showToast('Invoice registered', 'success');
+      try { await API.post('/api/invoices', invoiceData); } catch (e) { console.error(e); }
       document.getElementById('invoice-modal').classList.remove('active');
       this.renderActiveView();
     });
