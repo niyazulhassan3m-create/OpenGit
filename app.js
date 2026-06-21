@@ -6,7 +6,6 @@
 // Auth Manager - Login / Signup System
 // ==========================================================================
 
-if (!localStorage.getItem('crm_session')) { alert('App.js loaded! JS working!'); }
 const Auth = {
   usersKey: 'crm_users',
   sessionKey: 'crm_session',
@@ -159,20 +158,18 @@ const CRM = {
   init() {
     Auth.seedUsers();
 
-    // Check if logged in
     const session = Auth.getSession();
     if (!session) {
-      this.showAuthScreen();
+      this.initLoginPage();
       return;
     }
 
-    // Apply session to CRM
+    document.getElementById('login-page').style.display = 'none';
     this.state.currentRole = session.role;
     localStorage.setItem('crm_role', session.role);
 
     this.loadState();
     this.setupListeners();
-    this.authListeners();
     this.startTimers();
     this.renderActiveView();
     this.updateUserInterfaceForRole();
@@ -180,78 +177,71 @@ const CRM = {
     AutomationEngine.startBackgroundScheduler();
   },
 
-  showAuthScreen() {
+  initLoginPage() {
     document.getElementById('app-container').style.display = 'none';
-    document.getElementById('login-screen').style.display = 'flex';
-    document.getElementById('signup-screen').style.display = 'none';
-    this.authListeners();
-  },
+    var loginPage = document.getElementById('login-page');
+    loginPage.style.display = '';
 
-  authListeners() {
-    var self = this;
+    // Login button
+    document.getElementById('login-btn').addEventListener('click', function() {
+      var email = document.getElementById('login-email').value.trim();
+      var password = document.getElementById('login-password').value;
+      var errEl = document.getElementById('login-error');
+      if (!email || !password) {
+        errEl.textContent = 'Please enter email and password!';
+        return;
+      }
+      var result = Auth.login(email, password);
+      if (result.success) {
+        window.location.href = '/';
+      } else {
+        errEl.textContent = result.msg;
+      }
+    });
 
-    // Toggle login/signup
-    var showSignup = document.getElementById('show-signup');
-    var showLogin = document.getElementById('show-login');
-    if (showSignup) {
-      showSignup.onclick = function(e) {
-        e.preventDefault();
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('signup-screen').style.display = 'flex';
-      };
-    }
-    if (showLogin) {
-      showLogin.onclick = function(e) {
-        e.preventDefault();
-        document.getElementById('signup-screen').style.display = 'none';
-        document.getElementById('login-screen').style.display = 'flex';
-      };
-    }
+    // Signup button
+    document.getElementById('signup-btn').addEventListener('click', function() {
+      var name = document.getElementById('signup-name').value.trim();
+      var email = document.getElementById('signup-email').value.trim();
+      var password = document.getElementById('signup-password').value;
+      var role = document.getElementById('signup-role').value;
+      var errEl = document.getElementById('signup-error');
+      if (!name || !email || !password) {
+        errEl.textContent = 'Please fill all fields!';
+        return;
+      }
+      if (password.length < 6) {
+        errEl.textContent = 'Password must be at least 6 characters!';
+        return;
+      }
+      var result = Auth.register(name, email, password, role);
+      if (result.success) {
+        errEl.textContent = '';
+        document.getElementById('signup-name').value = '';
+        document.getElementById('signup-email').value = '';
+        document.getElementById('signup-password').value = '';
+        document.querySelector('.signup-box').style.display = 'none';
+        document.querySelector('.login-box').style.display = '';
+        document.getElementById('login-error').textContent = 'Account created! Please sign in.';
+        document.getElementById('login-error').style.color = '#22c55e';
+      } else {
+        errEl.textContent = result.msg;
+      }
+    });
 
-    // Login button click (not form submit to avoid page refresh)
-    var loginBtn = document.getElementById('login-btn');
-    if (loginBtn) {
-      loginBtn.onclick = function() {
-        var email = document.getElementById('login-email').value.trim();
-        var password = document.getElementById('login-password').value;
-        if (!email || !password) {
-          alert('Please enter email and password!');
-          return;
-        }
-        var result = Auth.login(email, password);
-        if (result.success) {
-          window.location.href = '/';
-        } else {
-          alert('Login failed: ' + result.msg);
-        }
-      };
-    }
+    // Toggle signup
+    document.getElementById('show-signup-link').addEventListener('click', function(e) {
+      e.preventDefault();
+      document.querySelector('.login-box').style.display = 'none';
+      document.querySelector('.signup-box').style.display = '';
+    });
 
-    // Signup button click
-    var signupBtn = document.getElementById('signup-btn');
-    if (signupBtn) {
-      signupBtn.onclick = function() {
-        var name = document.getElementById('signup-name').value.trim();
-        var email = document.getElementById('signup-email').value.trim();
-        var password = document.getElementById('signup-password').value;
-        var role = document.getElementById('signup-role').value;
-        if (!name || !email || !password) {
-          alert('Please fill all fields!');
-          return;
-        }
-        var result = Auth.register(name, email, password, role);
-        if (result.success) {
-          alert(result.msg + ' Please sign in.');
-          document.getElementById('signup-screen').style.display = 'none';
-          document.getElementById('login-screen').style.display = 'flex';
-          document.getElementById('signup-name').value = '';
-          document.getElementById('signup-email').value = '';
-          document.getElementById('signup-password').value = '';
-        } else {
-          alert('Signup failed: ' + result.msg);
-        }
-      };
-    }
+    // Toggle login
+    document.getElementById('show-login-link').addEventListener('click', function(e) {
+      e.preventDefault();
+      document.querySelector('.signup-box').style.display = 'none';
+      document.querySelector('.login-box').style.display = '';
+    });
   },
 
   // Load state from localStorage or populate defaults

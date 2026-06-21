@@ -1546,10 +1546,10 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ==========================================================================
-   9. Auth / Login Screen Styles
+   9. Login Page Styles
    ========================================================================== */
 
-.auth-screen {
+.login-page {
   position: fixed;
   inset: 0;
   z-index: 9999;
@@ -1558,72 +1558,62 @@ input:focus, select:focus, textarea:focus {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  animation: fadeIn 0.4s ease;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.98); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.auth-card {
+.login-box, .signup-box {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  padding: 40px;
+  padding: 36px;
   width: 100%;
-  max-width: 420px;
+  max-width: 400px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.4);
 }
 
-.auth-header {
-  text-align: center;
-  margin-bottom: 32px;
-}
+.login-logo { text-align: center; margin-bottom: 12px; }
 
-.auth-logo {
-  margin-bottom: 16px;
-}
-
-.auth-brand {
+.login-title {
   font-family: var(--font-heading);
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   font-weight: 800;
   background: var(--accent-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  margin-bottom: 8px;
+  text-align: center;
+  margin-bottom: 4px;
 }
 
-.auth-subtitle {
+.login-sub {
+  text-align: center;
   color: var(--text-secondary);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  margin-bottom: 24px;
 }
 
-.auth-form {
+.login-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
-.auth-field {
+.login-field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
-.auth-field label {
-  font-size: 0.85rem;
+.login-field label {
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-secondary);
 }
 
-.auth-field input,
-.auth-field select {
+.login-field input,
+.login-field select {
   background: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
-  padding: 12px 16px;
+  padding: 11px 14px;
   border-radius: var(--radius-sm);
   font-family: var(--font-body);
   font-size: 0.9rem;
@@ -1631,61 +1621,51 @@ input:focus, select:focus, textarea:focus {
   transition: all var(--transition-fast);
 }
 
-.auth-field input:focus,
-.auth-field select:focus {
+.login-field input:focus,
+.login-field select:focus {
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 2px var(--border-glow);
 }
 
-.auth-btn {
+.login-btn {
   width: 100%;
-  padding: 14px;
+  padding: 13px;
   font-size: 1rem;
   margin-top: 4px;
 }
 
-.auth-switch-text {
+.login-error {
+  color: #ef4444;
+  font-size: 0.85rem;
+  text-align: center;
+  min-height: 1.2em;
+  margin: 0;
+}
+
+.login-footer {
   text-align: center;
   color: var(--text-secondary);
   font-size: 0.85rem;
-  margin-top: 24px;
+  margin-top: 20px;
 }
 
-.auth-switch-text a {
+.login-footer a {
   color: var(--accent-primary);
   text-decoration: none;
   font-weight: 600;
 }
 
-.auth-switch-text a:hover {
+.login-footer a:hover {
   text-decoration: underline;
 }
 
-.auth-department-hint {
-  margin-top: 24px;
-  padding-top: 20px;
+.login-demo {
+  margin-top: 20px;
+  padding-top: 16px;
   border-top: 1px solid var(--border-color);
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-}
-
-.auth-department-hint strong {
-  display: block;
-  margin-bottom: 10px;
-}
-
-.auth-role-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.auth-role-list span {
-  background: var(--bg-tertiary);
-  padding: 4px 10px;
-  border-radius: 999px;
   font-size: 0.75rem;
-  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  line-height: 1.6;
 }
 
 /* Logout button in sidebar */
