@@ -193,7 +193,7 @@ const CRM = {
       }
       var result = Auth.login(email, password);
       if (result.success) {
-        window.location.href = '/';
+        window.location.reload();
       } else {
         errEl.textContent = result.msg;
       }
