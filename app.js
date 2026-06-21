@@ -186,74 +186,70 @@ const CRM = {
   },
 
   authListeners() {
-    const loginForm = document.getElementById('login-form');
-    const signupForm = document.getElementById('signup-form');
-
-    if (!loginForm || !signupForm) {
-      console.error('Auth: login/signup form not found!');
-      return;
-    }
+    var self = this;
 
     // Toggle login/signup
-    const showSignup = document.getElementById('show-signup');
-    const showLogin = document.getElementById('show-login');
+    var showSignup = document.getElementById('show-signup');
+    var showLogin = document.getElementById('show-login');
     if (showSignup) {
-      showSignup.onclick = (e) => {
+      showSignup.onclick = function(e) {
         e.preventDefault();
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('signup-screen').style.display = 'flex';
       };
     }
     if (showLogin) {
-      showLogin.onclick = (e) => {
+      showLogin.onclick = function(e) {
         e.preventDefault();
         document.getElementById('signup-screen').style.display = 'none';
         document.getElementById('login-screen').style.display = 'flex';
       };
     }
 
-    // Login submit
-    loginForm.onsubmit = (e) => {
-      e.preventDefault();
-      console.log('Auth: Login submitted');
-      const email = document.getElementById('login-email').value.trim();
-      const password = document.getElementById('login-password').value;
-      if (!email || !password) {
-        alert('Please enter email and password!');
-        return;
-      }
-      const result = Auth.login(email, password);
-      console.log('Auth: Login result', result);
-      if (result.success) {
-        window.location.href = '/';
-      } else {
-        alert('Login failed: ' + result.msg);
-      }
-    };
+    // Login button click (not form submit to avoid page refresh)
+    var loginBtn = document.getElementById('login-btn');
+    if (loginBtn) {
+      loginBtn.onclick = function() {
+        var email = document.getElementById('login-email').value.trim();
+        var password = document.getElementById('login-password').value;
+        if (!email || !password) {
+          alert('Please enter email and password!');
+          return;
+        }
+        var result = Auth.login(email, password);
+        if (result.success) {
+          window.location.href = '/';
+        } else {
+          alert('Login failed: ' + result.msg);
+        }
+      };
+    }
 
-    // Signup submit
-    signupForm.onsubmit = (e) => {
-      e.preventDefault();
-      console.log('Auth: Signup submitted');
-      const name = document.getElementById('signup-name').value.trim();
-      const email = document.getElementById('signup-email').value.trim();
-      const password = document.getElementById('signup-password').value;
-      const role = document.getElementById('signup-role').value;
-      if (!name || !email || !password) {
-        alert('Please fill all fields!');
-        return;
-      }
-      const result = Auth.register(name, email, password, role);
-      console.log('Auth: Signup result', result);
-      if (result.success) {
-        alert(result.msg + ' Please sign in.');
-        document.getElementById('signup-screen').style.display = 'none';
-        document.getElementById('login-screen').style.display = 'flex';
-        signupForm.reset();
-      } else {
-        alert('Signup failed: ' + result.msg);
-      }
-    };
+    // Signup button click
+    var signupBtn = document.getElementById('signup-btn');
+    if (signupBtn) {
+      signupBtn.onclick = function() {
+        var name = document.getElementById('signup-name').value.trim();
+        var email = document.getElementById('signup-email').value.trim();
+        var password = document.getElementById('signup-password').value;
+        var role = document.getElementById('signup-role').value;
+        if (!name || !email || !password) {
+          alert('Please fill all fields!');
+          return;
+        }
+        var result = Auth.register(name, email, password, role);
+        if (result.success) {
+          alert(result.msg + ' Please sign in.');
+          document.getElementById('signup-screen').style.display = 'none';
+          document.getElementById('login-screen').style.display = 'flex';
+          document.getElementById('signup-name').value = '';
+          document.getElementById('signup-email').value = '';
+          document.getElementById('signup-password').value = '';
+        } else {
+          alert('Signup failed: ' + result.msg);
+        }
+      };
+    }
   },
 
   // Load state from localStorage or populate defaults

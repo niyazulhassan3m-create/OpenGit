@@ -404,17 +404,17 @@
         <p class="auth-subtitle">Sign in to your account</p>
       </div>
 
-      <form id="login-form" class="auth-form">
+      <div id="login-form" class="auth-form">
         <div class="auth-field">
           <label for="login-email">Email Address</label>
-          <input type="email" id="login-email" placeholder="you@company.com" required>
+          <input type="email" id="login-email" placeholder="you@company.com">
         </div>
         <div class="auth-field">
           <label for="login-password">Password</label>
-          <input type="password" id="login-password" placeholder="Enter password" required>
+          <input type="password" id="login-password" placeholder="Enter password">
         </div>
-        <button type="submit" class="btn btn-primary auth-btn">Sign In</button>
-      </form>
+        <button id="login-btn" class="btn btn-primary auth-btn">Sign In</button>
+      </div>
 
       <p class="auth-switch-text">
         Don't have an account? <a href="#" id="show-signup">Create Account</a>
@@ -451,18 +451,18 @@
         <p class="auth-subtitle">Join your department workspace</p>
       </div>
 
-      <form id="signup-form" class="auth-form">
+      <div id="signup-form" class="auth-form">
         <div class="auth-field">
           <label for="signup-name">Full Name</label>
-          <input type="text" id="signup-name" placeholder="John Doe" required>
+          <input type="text" id="signup-name" placeholder="John Doe">
         </div>
         <div class="auth-field">
           <label for="signup-email">Email Address</label>
-          <input type="email" id="signup-email" placeholder="you@company.com" required>
+          <input type="email" id="signup-email" placeholder="you@company.com">
         </div>
         <div class="auth-field">
           <label for="signup-password">Password</label>
-          <input type="password" id="signup-password" placeholder="Min 6 characters" required minlength="6">
+          <input type="password" id="signup-password" placeholder="Min 6 characters">
         </div>
         <div class="auth-field">
           <label for="signup-role">Department / Role</label>
@@ -474,8 +474,8 @@
             <option value="support">🎧 Customer Support</option>
           </select>
         </div>
-        <button type="submit" class="btn btn-primary auth-btn">Create Account</button>
-      </form>
+        <button id="signup-btn" class="btn btn-primary auth-btn">Create Account</button>
+      </div>
 
       <p class="auth-switch-text">
         Already have an account? <a href="#" id="show-login">Sign In</a>
