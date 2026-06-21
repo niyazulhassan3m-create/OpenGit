@@ -1,4 +1,5 @@
 {
+  "engines": { "node": ">=18" },
   "name": "omnicrm",
   "version": "2.0.0",
   "description": "OmniCRM - Full-stack CRM with Node.js + SQLite backend",

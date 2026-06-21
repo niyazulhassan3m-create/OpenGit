@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: omnicrm
+    runtime: node
+    repo: https://github.com/niyazulhassan3m-create/OpenGit
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: JWT_SECRET
+        generateValue: true

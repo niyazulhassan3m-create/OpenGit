@@ -131,6 +131,11 @@ app.use('/api/tickets', crudRoutes('tickets', 'TCK', { subject: '', client: '', 
 app.use('/api/invoices', crudRoutes('invoices', 'INV', { projectId: '', client: '', project: '', milestone: '', amount: 0, issueDate: '', dueDate: '', status: 'Pending' }));
 app.use('/api/tasks', crudRoutes('tasks', 'TSK', { title: '', project: '', assignee: '', priority: 'Medium', status: 'Pending', deadline: '', createdDate: '' }));
 
+// --- Health Check (for Render) ---
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
 // --- Automation Logs ---
 app.get('/api/automation-logs', authMiddleware, (req, res) => {
   const db = getDb();

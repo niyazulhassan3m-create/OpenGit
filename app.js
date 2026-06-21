@@ -613,9 +613,9 @@ const CRM = {
       <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
         <div>
           <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary);">${acc.name}</h3>
-          <span style="font-size: 0.8rem; color: var(--text-muted);">${acc.phone} &bull; ${acc.region}</span>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">${acc.phone || ''} &bull; ${acc.industry || acc.region || ''}</span>
         </div>
-        <span class="badge badge-success">${acc.service}</span>
+        <span class="badge badge-success">${acc.industry || acc.service || 'Active'}</span>
       </div>
 
       <div class="control-group" style="margin-bottom: 20px;">
@@ -625,7 +625,7 @@ const CRM = {
       </div>
 
       <div class="timeline">
-        ${acc.timeline.slice().reverse().map(event => `
+        ${(acc.timeline || []).slice().reverse().map(event => `
           <div class="timeline-event">
             <div class="timeline-event-header">
               <span class="timeline-title">${event.title}</span>
@@ -634,6 +634,7 @@ const CRM = {
             <div class="timeline-body">${event.description}</div>
           </div>
         `).join('')}
+        ${!acc.timeline || acc.timeline.length === 0 ? '<div style="color:var(--text-muted);font-size:0.85rem;padding:16px 0;">No timeline events yet</div>' : ''}
       </div>
     `;
   },
@@ -649,6 +650,7 @@ const CRM = {
       case 'Meeting': desc = "Sync review meeting completed. Confirmed deliverables roadmap timelines."; break;
     }
 
+    if (!acc.timeline) acc.timeline = [];
     acc.timeline.push({
       title: `${type} Logged`,
       date: new Date().toISOString().split('T')[0],
@@ -687,25 +689,26 @@ const CRM = {
             </div>
 
             <div style="font-size: 0.85rem; display: flex; justify-content: space-between;">
-              <span style="color: var(--text-secondary);">PM: <strong>${project.pm}</strong></span>
+              <span style="color: var(--text-secondary);">Team: <strong>${project.team || project.pm || '-'}</strong></span>
               <span style="color: var(--text-secondary);">Due: <strong>${project.deadline}</strong></span>
             </div>
 
             <div style="border-top: 1px solid var(--border-color); padding-top: 14px;">
               <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 8px;">Milestone Checklist</span>
               <div style="display: flex; flex-direction: column; gap: 8px;">
-                ${project.milestones.map((m, idx) => `
+                ${(project.milestones || []).map((m, idx) => `
                   <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-primary); cursor: pointer;">
                     <input type="checkbox" ${m.completed ? 'checked disabled' : ''} onchange="CRM.completeMilestone('${project.id}', ${idx})" style="width: 16px; height: 16px;">
                     <span style="${m.completed ? 'text-decoration: line-through; color: var(--text-muted);' : ''}">${m.name}</span>
                     ${m.completed ? `<span style="font-size: 0.75rem; color: var(--color-success); margin-left: auto;">${m.completedDate}</span>` : ''}
                   </label>
                 `).join('')}
+                ${!project.milestones || project.milestones.length === 0 ? '<span style="font-size:0.8rem;color:var(--text-muted);">No milestones defined</span>' : ''}
               </div>
             </div>
             
             <div style="font-size: 0.85rem; color: var(--accent-secondary); font-weight: 600; text-align: right;">
-              Budget: $${parseFloat(project.budget).toLocaleString()}
+              Value: $${parseFloat(project.value || project.budget || 0).toLocaleString()}
             </div>
           </div>
         `).join('') || '<div class="card" style="grid-column: span 3; text-align: center; color: var(--text-muted);">No active projects listed. Won leads spawn projects automatically.</div>'}
@@ -715,13 +718,12 @@ const CRM = {
 
   completeMilestone(projectId, milestoneIndex) {
     const project = this.state.projects.find(p => p.id === projectId);
-    if (!project) return;
+    if (!project || !project.milestones) return;
 
-    // Update milestone state
+    if (!project.milestones[milestoneIndex]) return;
     project.milestones[milestoneIndex].completed = true;
     project.milestones[milestoneIndex].completedDate = new Date().toISOString().split('T')[0];
 
-    // Recalculate progress
     const completedCount = project.milestones.filter(m => m.completed).length;
     project.progress = Math.round((completedCount / project.milestones.length) * 100);
 
@@ -769,7 +771,7 @@ const CRM = {
                 <td>
                   <strong>${ticket.subject}</strong>
                   <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; max-width: 320px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                    ${ticket.description || 'No description'}
+                    ${ticket.description || ticket.category || 'No description'}
                   </div>
                 </td>
                 <td><span class="priority-pill priority-${ticket.priority}">${ticket.priority}</span></td>
@@ -778,10 +780,10 @@ const CRM = {
                     ${ticket.status}
                   </span>
                 </td>
-                <td>${ticket.assignee || 'Unassigned'}</td>
+                <td>${ticket.assignee || ticket.agent || 'Unassigned'}</td>
                 <td>
                   ${ticket.status === 'Resolved' ? '<span class="badge badge-success">Closed SLA</span>' : 
-                    `<span class="badge badge-danger sla-timer" data-start="${ticket.createdTime}" data-priority="${ticket.priority}">Calculating...</span>`
+                    `<span class="badge badge-danger sla-timer" data-start="${ticket.createdTime || ticket.createdDate}" data-priority="${ticket.priority}">Calculating...</span>`
                   }
                 </td>
                 <td>
@@ -824,13 +826,12 @@ const CRM = {
     if (!ticket) return;
 
     ticket.status = 'In Progress';
-    // Assign to active role user
     switch (this.state.currentRole) {
-      case 'management': ticket.assignee = "Sarah Jenkins"; break;
-      case 'sales': ticket.assignee = "Marcus Vance"; break;
-      case 'service': ticket.assignee = "Devin Carter"; break;
-      case 'finance': ticket.assignee = "Helena Rostova"; break;
-      case 'support': ticket.assignee = "Alex Rivera"; break;
+      case 'management': ticket.agent = ticket.agent || "Sarah Jenkins"; break;
+      case 'sales': ticket.agent = ticket.agent || "Marcus Vance"; break;
+      case 'service': ticket.agent = ticket.agent || "Devin Carter"; break;
+      case 'finance': ticket.agent = ticket.agent || "Helena Rostova"; break;
+      case 'support': ticket.agent = ticket.agent || "Alex Rivera"; break;
     }
     this.saveToApi('tickets');
     this.showToast(`Ticket ${ticketId} assigned and marked In Progress`, 'success');
