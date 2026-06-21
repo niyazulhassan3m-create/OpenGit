@@ -7,7 +7,9 @@ const AutomationEngine = {
   rules: {
     leadAssignment: true,
     projectDelivery: true,
-    invoiceAutomation: true
+    invoiceAutomation: true,
+    slaEscalation: true,
+    followUpReminder: true
   },
 
   // Save rules to localStorage
@@ -57,9 +59,24 @@ const AutomationEngine = {
           this.handleProjectDelivery(data);
         }
         break;
+      case 'leadLost':
+        if (this.rules.followUpReminder) {
+          this.handleLostLead(data);
+        }
+        break;
       case 'milestoneCompleted':
         if (this.rules.invoiceAutomation) {
           this.handleMilestoneInvoicing(data.project, data.milestoneIndex);
+        }
+        break;
+      case 'ticketCreated':
+        if (this.rules.slaEscalation) {
+          this.handleSLAEscalation(data);
+        }
+        break;
+      case 'ticketBreached':
+        if (this.rules.slaEscalation) {
+          this.handleSLAEscalationBreach(data);
         }
         break;
       default:
@@ -244,5 +261,97 @@ const AutomationEngine = {
         'success'
       );
     }, 1200);
+  },
+
+  /* ------------------------------------------------------------------------
+     Workflow 4: SLA Escalation Automation
+     ------------------------------------------------------------------------ */
+  handleSLAEscalation(ticket) {
+    // If ticket is Urgent/High priority, auto-assign to senior team
+    if (ticket.priority === 'Urgent' || ticket.priority === 'High') {
+      ticket.assignee = 'Sarah Jenkins (Escalated)';
+
+      const tasks = JSON.parse(localStorage.getItem('crm_tasks') || '[]');
+      const newTask = {
+        id: 'TSK-' + Math.floor(Math.random() * 10000),
+        associatedId: ticket.id,
+        associatedType: 'Ticket',
+        title: `[SLA Alert] Escalate ticket: ${ticket.subject}`,
+        assignedTo: 'Sarah Jenkins',
+        dueDate: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+        status: 'Open',
+        priority: 'High'
+      };
+      tasks.push(newTask);
+      localStorage.setItem('crm_tasks', JSON.stringify(tasks));
+
+      this.logActivity(
+        'SLA Escalation',
+        `Ticket <strong>${ticket.id}</strong> ("${ticket.subject}") auto-escalated to <strong>Sarah Jenkins</strong>. Priority: <strong>${ticket.priority}</strong>. Follow-up task created.`,
+        'warning'
+      );
+    }
+  },
+
+  handleSLAEscalationBreach(ticket) {
+    const ticketDate = new Date(ticket.createdTime).getTime();
+    const now = Date.now();
+    let slaHours = 24;
+    if (ticket.priority === 'Urgent') slaHours = 2;
+    else if (ticket.priority === 'High') slaHours = 4;
+    else if (ticket.priority === 'Medium') slaHours = 8;
+
+    const elapsed = (now - ticketDate) / (1000 * 60 * 60);
+    if (elapsed > slaHours && ticket.status !== 'Resolved') {
+      this.logActivity(
+        'SLA Escalation',
+        `⚠️ <strong>SLA BREACHED</strong> for ticket <strong>${ticket.id}</strong>! ${ticket.priority} ticket exceeded ${slaHours}hr SLA. Management notified.`,
+        'danger'
+      );
+    }
+  },
+
+  /* ------------------------------------------------------------------------
+     Workflow 5: Lost Lead Auto-Reassignment
+     ------------------------------------------------------------------------ */
+  handleLostLead(lead) {
+    const tasks = JSON.parse(localStorage.getItem('crm_tasks') || '[]');
+    const newTask = {
+      id: 'TSK-' + Math.floor(Math.random() * 10000),
+      associatedId: lead.id,
+      associatedType: 'Lead',
+      title: `Review lost lead: ${lead.name} (${lead.company}) - Consider re-engagement`,
+      assignedTo: lead.owner || 'Sarah Jenkins',
+      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      status: 'Open',
+      description: `Lead was lost at stage "${lead.stage}". Value was $${parseFloat(lead.value).toLocaleString()}.`
+    };
+    tasks.push(newTask);
+    localStorage.setItem('crm_tasks', JSON.stringify(tasks));
+
+    this.logActivity(
+      'Lost Lead Review',
+      `Lead <strong>${lead.name}</strong> marked <strong>Lost</strong>. Re-engagement review task auto-created for <strong>${lead.owner}</strong>.`,
+      'info'
+    );
+  },
+
+  /* ------------------------------------------------------------------------
+     Background Scheduler - Checks SLA every 60 seconds
+     ------------------------------------------------------------------------ */
+  startBackgroundScheduler() {
+    setInterval(() => {
+      this.loadRules();
+      if (!this.rules.slaEscalation) return;
+
+      const tickets = JSON.parse(localStorage.getItem('crm_tickets') || '[]');
+      tickets.forEach(ticket => {
+        if (ticket.status !== 'Resolved') {
+          this.handleSLAEscalationBreach(ticket);
+        }
+      });
+    }, 60000);
+
+    this.logActivity('System', '🔄 Background SLA monitor started. Checking tickets every 60s.', 'info');
   }
 };

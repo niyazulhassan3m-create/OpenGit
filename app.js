@@ -86,6 +86,7 @@ const CRM = {
     this.renderActiveView();
     this.updateUserInterfaceForRole();
     this.updateSystemDate();
+    AutomationEngine.startBackgroundScheduler();
   },
 
   // Load state from localStorage or populate defaults
@@ -1002,6 +1003,32 @@ const CRM = {
               </label>
             </div>
           </div>
+
+          <div class="workflow-card">
+            <div class="workflow-info">
+              <span class="workflow-name">4. SLA Escalation Management</span>
+              <span class="workflow-desc">Urgent/High priority tickets auto-escalated to senior team. Background SLA monitor alerts on breach.</span>
+            </div>
+            <div class="workflow-status">
+              <label class="switch">
+                <input type="checkbox" id="wf-sla-switch" ${AutomationEngine.rules.slaEscalation ? 'checked' : ''}>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="workflow-card">
+            <div class="workflow-info">
+              <span class="workflow-name">5. Lost Lead Review & Re-engagement</span>
+              <span class="workflow-desc">When a lead is marked Lost, auto-creates a review task for re-engagement strategy planning.</span>
+            </div>
+            <div class="workflow-status">
+              <label class="switch">
+                <input type="checkbox" id="wf-followup-switch" ${AutomationEngine.rules.followUpReminder ? 'checked' : ''}>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
         </div>
 
         <!-- Automation Log Stream Panel -->
@@ -1040,6 +1067,18 @@ const CRM = {
       AutomationEngine.saveRules();
       this.showToast(`Invoice automation workflow ${e.target.checked ? 'activated' : 'deactivated'}`, 'info');
     });
+
+    document.getElementById('wf-sla-switch').addEventListener('change', (e) => {
+      AutomationEngine.rules.slaEscalation = e.target.checked;
+      AutomationEngine.saveRules();
+      this.showToast(`SLA escalation workflow ${e.target.checked ? 'activated' : 'deactivated'}`, 'info');
+    });
+
+    document.getElementById('wf-followup-switch').addEventListener('change', (e) => {
+      AutomationEngine.rules.followUpReminder = e.target.checked;
+      AutomationEngine.saveRules();
+      this.showToast(`Lost lead review workflow ${e.target.checked ? 'activated' : 'deactivated'}`, 'info');
+    });
   },
 
   /* ==========================================================================
@@ -1066,6 +1105,9 @@ const CRM = {
     if (lead.stage === 'Won' && prevStage !== 'Won') {
       AutomationEngine.trigger('leadWon', lead);
       this.loadState(); // reload newly spawned projects/accounts
+    }
+    if (lead.stage === 'Lost' && prevStage !== 'Lost') {
+      AutomationEngine.trigger('leadLost', lead);
     }
 
     this.renderActiveView();
@@ -1333,6 +1375,7 @@ const CRM = {
       this.saveState('tickets');
       this.showToast(`Ticket opened successfully`, 'success');
       
+      AutomationEngine.trigger('ticketCreated', ticketData);
       AutomationEngine.logActivity(
         'Service Request',
         `New support case <strong>${ticketData.id}</strong> ("${ticketData.subject}") filed by <strong>${ticketData.client}</strong>. SLA timer started.`,
